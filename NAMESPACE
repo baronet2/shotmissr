@@ -2,5 +2,6 @@
 
 import(Rcpp)
 import(methods)
-importFrom(rstan, sampling)
-useDynLib(rstanlm, .registration = TRUE)
+importFrom(magrittr,"%>%")
+importFrom(rstan,sampling)
+useDynLib(shotmissr, .registration = TRUE)

@@ -1,6 +1,6 @@
 #' The 'shotmissr' package.
 #'
-#' @description A DESCRIPTION OF THE PACKAGE
+#' @description Companion Repository to "Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer"
 #'
 #' @docType package
 #' @name shotmissr-package

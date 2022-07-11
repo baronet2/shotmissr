@@ -17,6 +17,7 @@ Biarch: true
 Depends: 
     R (>= 3.4.0)
 Imports: 
+    magrittr,
     methods,
     Rcpp (>= 0.12.0),
     RcppParallel (>= 5.0.1),
