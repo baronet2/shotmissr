@@ -21,7 +21,7 @@
 #' get_execution_error_covariance(1.25)
 get_execution_error_covariance <- function(height)
 {
-  predictions <- linear_fits %>%
+  predictions <- execution_error_linear_fits %>%
     dplyr::rowwise() %>%
     dplyr::mutate(
       prediction = predict(model, data.frame(target_height_yards = height))

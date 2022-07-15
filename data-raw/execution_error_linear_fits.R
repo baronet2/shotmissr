@@ -8,7 +8,7 @@ execution_error_fits <- Hunter_et_al_2018_shots %>%
     var_xy = cov(data$horizontal_error_yards, data$vertical_error_yards)
   )
 
-linear_fits <- data.frame(thing = c("var_xx", "var_yy", "var_xy")) %>%
+execution_error_linear_fits <- data.frame(thing = c("var_xx", "var_yy", "var_xy")) %>%
   dplyr::rowwise() %>%
   dplyr::mutate(
     formula = paste0(thing, "~ target_height_yards"),
@@ -18,4 +18,4 @@ linear_fits <- data.frame(thing = c("var_xx", "var_yy", "var_xy")) %>%
     ))
   )
 
-usethis::use_data(linear_fits, overwrite = TRUE, internal = TRUE)
+usethis::use_data(execution_error_linear_fits, overwrite = TRUE, internal = TRUE)
