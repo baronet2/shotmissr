@@ -6,7 +6,7 @@
 \alias{shotmissr}
 \title{The 'shotmissr' package.}
 \description{
-A DESCRIPTION OF THE PACKAGE
+Companion Repository to "Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer"
 }
 \references{
 Stan Development Team (2020). RStan: the R interface to Stan. R package version 2.21.2. https://mc-stan.org
