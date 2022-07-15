@@ -4,3 +4,5 @@ inst/doc
 data-raw/statsbomb_shots_raw
 data/statsbomb_shots.rda
 data/statsbomb_shots_processed.rda
+data-raw/Hunter_et_al_2018_shots.csv
+data/Hunter_et_al_2018_shots.rda
