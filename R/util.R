@@ -31,7 +31,7 @@ crossbar_z <- function()
 #' Is shot on target?
 #'
 #' @param y A numeric vector of shot end y coordinates
-#' @param z A numeric vector of shot end z coordinates#'
+#' @param z A numeric vector of shot end z coordinates
 #'
 #' @return Boolean vector indicating whether each shot is on target
 #'
