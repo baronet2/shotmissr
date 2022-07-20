@@ -52,7 +52,11 @@ adjust_shot_end_coords <- function(data)
 project_shot_end_coords <- function(data)
 {
   # TODO Implement. See https://github.com/baronet2/UofT-TFC-Off-Target-Shots/blob/main/utilities/features/shot_trajectory.py
-  data
+  data %>%
+    dplyr::mutate(
+      y_end_proj = y_end,
+      z_end_proj = z_end
+    )
 }
 
 
@@ -88,7 +92,9 @@ flip_left_foot_shot_end_coords <- function(data)
 {
   data %>%
     dplyr::mutate(
-      y_end_proj = ifelse(y_end_proj > 40, y_end_proj, 80 - y_end_proj)
+      y_end_proj = ifelse(y_end_proj > center_line_y(),
+                          y_end_proj,
+                          2 * center_line_y() - y_end_proj)
     )
 }
 

@@ -26,5 +26,3 @@ statsbomb_shots_processed <- statsbomb_shots %>%
   project_shot_end_coords()
 
 usethis::use_data(statsbomb_shots_processed, overwrite = TRUE)
-
-

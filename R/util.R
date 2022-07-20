@@ -16,6 +16,12 @@ right_post_y <- function()
   44
 }
 
+#' y-coordinate of center line
+center_line_y <- function()
+{
+  (left_post_y() + right_post_y()) / 2
+}
+
 #' z-coordinate of crossbar
 crossbar_z <- function()
 {

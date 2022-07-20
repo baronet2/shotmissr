@@ -17,7 +17,7 @@
 #'
 #' @return A 2x2 covariance matrix
 #'
-#' @example
+#' @examples
 #' get_execution_error_covariance(1.25)
 get_execution_error_covariance <- function(height)
 {

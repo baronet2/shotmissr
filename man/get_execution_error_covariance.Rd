@@ -25,4 +25,7 @@ a shot aimed at the given target height, with all units in yards
 Get the covariance matrix of exeucution error in the (y, z) end coordinates
 for soccer shots aimed at a given height.
 }
+\examples{
+get_execution_error_covariance(1.25)
+}
 \keyword{datasets}
