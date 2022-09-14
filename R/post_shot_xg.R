@@ -1,11 +1,3 @@
-#' Coordinates-based Post-shot Expected Goals Model
-#'
-#' The post-shot expected goals model we develop based off only the shot end coordinates
-#'
-#' @export
-"post_shot_xg_model"
-
-
 #' Filter shots for post-shot expected goals model
 #'
 #' @description Filter the shots data to include only shots used to train the

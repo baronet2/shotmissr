@@ -1,23 +1,3 @@
-#' StatsBomb shots data
-#'
-#' The full shot data used in the paper. Not available to the public.
-#'
-#' @source Provided by StatsBomb for our academic research collaboration with Toronto FC.
-#'
-#' @export
-"statsbomb_shots"
-
-
-#' Processed StatsBomb shots data
-#'
-#' The processed full shot data used in the paper. Not available to the public.
-#'
-#' @source Based on \code{statsbomb_shots}
-#'
-#' @export
-"statsbomb_shots_processed"
-
-
 #' Adjust shot end coordinates
 #'
 #' Adjust the shot end coordinates to fix bias in data collection process for shots

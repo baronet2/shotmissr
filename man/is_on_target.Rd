@@ -9,7 +9,7 @@ is_on_target(y, z)
 \arguments{
 \item{y}{A numeric vector of shot end y coordinates}
 
-\item{z}{A numeric vector of shot end z coordinates#'}
+\item{z}{A numeric vector of shot end z coordinates}
 }
 \value{
 Boolean vector indicating whether each shot is on target

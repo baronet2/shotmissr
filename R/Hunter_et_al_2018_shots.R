@@ -19,6 +19,8 @@
 #'
 #' @examples
 #' get_execution_error_covariance(1.25)
+#'
+#' @export
 get_execution_error_covariance <- function(height)
 {
   predictions <- execution_error_linear_fits %>%
@@ -47,13 +49,3 @@ flip_left_foot_Hunter_shots <- function(data)
       horizontal_error_yards = ifelse(foot == "right", 1, -1) * horizontal_error_yards
     )
 }
-
-#' Execution error covariance by target height
-#'
-#' @param height The shot target height in yards
-#'
-#' @return A 2x2 covariance matrix representing the estimated execution error for
-#' a shot aimed at the given target height, with all units in yards
-#'
-#' @export
-"get_execution_error_covariance"
