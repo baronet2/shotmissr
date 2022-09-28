@@ -38,3 +38,28 @@ statsbomb_shots_processed |>
 ```
 
 
+```{r}
+statsbomb_shots |>
+  dplyr::filter(League == "USL", Season == 2020) |>
+  dplyr::filter(!is.na(z_end)) |>
+  dplyr::filter(grepl("Saved", outcome)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2) +
+  ggplot2::theme_bw()
+
+statsbomb_shots_processed |>
+  dplyr::filter(League == "USL", Season == 2020) |>
+  dplyr::filter(!is.na(z_end)) |>
+  dplyr::filter(grepl("Saved", outcome)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2) +
+  ggplot2::theme_bw()
+```
