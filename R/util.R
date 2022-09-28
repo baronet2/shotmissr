@@ -5,25 +5,25 @@ x_goal_line <- function()
 }
 
 #' y-coordinate of left post
-left_post_y <- function()
+y_left_post <- function()
 {
   36
 }
 
 #' y-coordinate of right post
-right_post_y <- function()
+y_right_post <- function()
 {
   44
 }
 
 #' y-coordinate of center line
-center_line_y <- function()
+y_center_line <- function()
 {
-  (left_post_y() + right_post_y()) / 2
+  (y_left_post() + y_right_post()) / 2
 }
 
 #' z-coordinate of crossbar
-crossbar_z <- function()
+z_crossbar <- function()
 {
   2.67
 }
@@ -38,5 +38,5 @@ crossbar_z <- function()
 #' @export
 is_on_target <- function(y, z)
 {
-  (y >= left_post_y()) & (y <= right_post_y()) & (z <= crossbar_z())
+  (y >= y_left_post()) & (y <= y_right_post()) & (z <= z_crossbar())
 }

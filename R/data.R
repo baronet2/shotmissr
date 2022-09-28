@@ -74,9 +74,9 @@ flip_left_foot_shot_end_coords <- function(data)
 {
   data %>%
     dplyr::mutate(
-      y_end_proj = ifelse(y_end_proj > center_line_y(),
+      y_end_proj = ifelse(y_end_proj > y_center_line(),
                           y_end_proj,
-                          2 * center_line_y() - y_end_proj)
+                          2 * y_center_line() - y_end_proj)
     )
 }
 
