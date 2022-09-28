@@ -32,7 +32,9 @@ statsbomb_shots_processed |>
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome))
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2) +
+  ggplot2::theme_bw()
 ```
 
 
