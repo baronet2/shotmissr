@@ -1,0 +1,38 @@
+---
+title: "Miss It Like Messi"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Miss It Like Messi}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(shotmissr)
+```
+
+```{r}
+statsbomb_shots_processed |>
+  dplyr::group_by(League, Season) |>
+  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
+```
+
+```{r}
+statsbomb_shots_processed |>
+  dplyr::filter(League == "MLS", Season == 2018) |>
+  dplyr::filter(!is.na(z_end)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome))
+```
+
+
