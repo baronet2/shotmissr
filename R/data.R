@@ -49,11 +49,13 @@ project_shot_end_coords <- function(data)
 #' @param data A data frame with shot details
 #'
 #' @return The same data frame with some rows removed
+#'
+#' @export
 filter_shooting_skill_data <- function(data)
 {
   data %>%
     dplyr::filter(
-      distance >= 15,
+      # TODO distance >= 15,
       SBPreXg < 0.1
     )
 }

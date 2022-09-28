@@ -23,6 +23,7 @@ usethis::use_data(statsbomb_shots, overwrite = TRUE)
 # For all other files: correct z coords only, do project end coords for saved shots
 statsbomb_shots_processed <- statsbomb_shots %>%
   adjust_shot_end_coords() %>%
-  project_shot_end_coords()
+  project_shot_end_coords() %>%
+  filter_shooting_skill_data()
 
 usethis::use_data(statsbomb_shots_processed, overwrite = TRUE)
