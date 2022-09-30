@@ -71,10 +71,33 @@ adjust_shot_end_coords <- function(data)
       dplyr::select(-condition)
   }
 
+  .adjust_z_start <- function(data) {
+    data  |>
+      # Fill NA z_start with mean z_Start for that body-part and technique
+      dplyr::group_by(body_part, technique) |>
+      dplyr::mutate(
+        z_start = dplyr::case_when(
+          is.na(z_start) ~ mean(z_start, na.rm = TRUE),
+          TRUE ~ z_start
+        )
+      ) |>
+      dplyr::ungroup() |>
+      # If still NA, use mean z_Start for that body-part
+      dplyr::group_by(body_part) |>
+        dplyr::mutate(
+          z_start = dplyr::case_when(
+            is.na(z_start) ~ mean(z_start, na.rm = TRUE),
+            TRUE ~ z_start
+          )
+        ) |>
+        dplyr::ungroup()
+  }
+
   data %>%
     .adjust_x_end() |>
     .adjust_y_end() |>
-    .adjust_z_end()
+    .adjust_z_end() |>
+    .adjust_z_start()
 }
 
 
