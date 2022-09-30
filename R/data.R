@@ -10,50 +10,71 @@
 #' @export
 adjust_shot_end_coords <- function(data)
 {
+
+  .adjust_x_end <- function(data) {
+    data %>%
+      dplyr::mutate(
+        x_end = ifelse(outcome %in% c('Goal', 'Off T', 'Post'), x_end, x_goal_line())
+      )
+  }
+
+  .adjust_y_end <- function(data) {
+    data %>%
+      dplyr::mutate(
+        condition = dplyr::case_when(
+          z_end > 3.2 ~ 1, # High ball - don't adjust
+          y_end < 35.6 ~ 2, # Left of goal
+          y_end <= 35.8  ~ 3, # Left post
+          y_end <= 44 ~ 4, # dplyr::between posts
+          y_end < 44.8 ~ 5, # Right post
+          TRUE ~ 6 # Right of goal
+        ),
+      ) %>%
+      dplyr::group_by(condition) %>%
+      dplyr::mutate(
+        y_end = dplyr::case_when(
+          x_end != x_goal_line() ~ y_end,
+          condition == 1 ~ y_end,
+          condition == 2 ~ scales::rescale(y_end, c(min(y_end), 35.85)),
+          condition == 3 ~ scales::rescale(y_end, c(35.85, 36)),
+          condition == 4 ~ scales::rescale(y_end, c(36, 43.9)),
+          condition == 5 ~ scales::rescale(y_end, c(44, 44.15)),
+          condition == 6 ~ scales::rescale(y_end, c(44.15, max(y_end)))
+        )
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::select(-condition)
+  }
+
+  .adjust_z_end <- function(data) {
+    data  |>
+      dplyr::mutate(
+        condition = dplyr::case_when(
+          dplyr::between(z_end, 1.3, 2.4) & dplyr::between(y_end, 35.6, 44.6) ~ 1,
+          dplyr::between(z_end, 2.7, 3) ~ 2,
+          dplyr::between(z_end, 3, 3.2) ~ 3,
+          z_end > 3.2 ~ 4,
+          TRUE ~ 5
+        )
+      ) |>
+      dplyr::group_by(condition) |>
+      dplyr::mutate(
+        z_end = dplyr::case_when(
+          condition == 1 ~ scales::rescale(z_end, c(1.2, 2.6)),
+          condition == 2 ~ scales::rescale(z_end, c(2.7, 2.8)),
+          condition == 3 ~ scales::rescale(z_end, c(2.8, 2.9)),
+          condition == 4 ~ scales::rescale(z_end, c(2.9, 7.8)),
+          condition == 5 ~ z_end
+        )
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::select(-condition)
+  }
+
   data %>%
-    dplyr::mutate(
-      x_end = ifelse(outcome %in% c('Goal', 'Off T', 'Post'), x_end, x_goal_line()),
-      condition = dplyr::case_when(
-        z_end > 3.2 ~ 1, # High ball - don't adjust
-        y_end < 35.6 ~ 2, # Left of goal
-        y_end <= 35.8  ~ 3, # Left post
-        y_end <= 44 ~ 4, # dplyr::between posts
-        y_end < 44.8 ~ 5, # Right post
-        TRUE ~ 6 # Right of goal
-      ),
-    ) %>%
-    dplyr::group_by(condition) %>%
-    dplyr::mutate(
-      y_end = dplyr::case_when(
-        condition == 1 ~ y_end,
-        condition == 2 ~ scales::rescale(y_end, c(min(y_end), 35.85)),
-        condition == 3 ~ scales::rescale(y_end, c(35.85, 36)),
-        condition == 4 ~ scales::rescale(y_end, c(36, 43.9)),
-        condition == 5 ~ scales::rescale(y_end, c(44, 44.15)),
-        condition == 6 ~ scales::rescale(y_end, c(44.15, max(y_end)))
-      )
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(
-      condition = dplyr::case_when(
-        dplyr::between(z_end, 1.3, 2.4) & dplyr::between(y_end, 35.6, 44.6) ~ 1,
-        dplyr::between(z_end, 2.7, 3) ~ 2,
-        dplyr::between(z_end, 3, 3.2) ~ 3,
-        z_end > 3.2 ~ 4,
-        TRUE ~ 5
-      )
-    ) |>
-    dplyr::group_by(condition) |>
-    dplyr::mutate(
-      z_end = dplyr::case_when(
-        condition == 1 ~ scales::rescale(z_end, c(1.2, 2.6)),
-        condition == 2 ~ scales::rescale(z_end, c(2.7, 2.8)),
-        condition == 3 ~ scales::rescale(z_end, c(2.8, 2.9)),
-        condition == 4 ~ scales::rescale(z_end, c(2.9, 7.8)),
-        condition == 5 ~ z_end
-      )
-    ) |>
-    dplyr::ungroup()
+    .adjust_x_end() |>
+    .adjust_y_end() |>
+    .adjust_z_end()
 }
 
 
