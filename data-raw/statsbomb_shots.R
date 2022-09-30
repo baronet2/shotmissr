@@ -14,9 +14,6 @@ statsbomb_shots <- lapply(file_paths, load_data) %>%
   data.table::rbindlist() %>%
   clean_raw_statsbomb_data()
 
-# TODO Clean and fix encoding for player names
-# May want to use guess_encoding()
-
 usethis::use_data(statsbomb_shots, overwrite = TRUE)
 
 # TODO Follow instructions below
