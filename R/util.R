@@ -1,28 +1,38 @@
 #' x-coordinate of goal line
+#'
+#' @export
 x_goal_line <- function()
 {
   120
 }
 
 #' y-coordinate of left post
+#'
+#' @export
 y_left_post <- function()
 {
   36
 }
 
 #' y-coordinate of right post
+#'
+#' @export
 y_right_post <- function()
 {
   44
 }
 
 #' y-coordinate of center line
+#'
+#' @export
 y_center_line <- function()
 {
   (y_left_post() + y_right_post()) / 2
 }
 
 #' z-coordinate of crossbar
+#'
+#' @export
 z_crossbar <- function()
 {
   2.67
