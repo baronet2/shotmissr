@@ -10,10 +10,8 @@
 #' @export
 filter_post_xg_shots <- function(data)
 {
-  # TODO Only include saved shots and goals
-  # TODO Only include on-target shots
   data %>%
-    dplyr::filter(!is.na(z_end_proj))
+    dplyr::filter(is_on_target(y_end_proj, z_end_proj))
 }
 
 
@@ -33,9 +31,9 @@ filter_post_xg_shots <- function(data)
 #' predict_post_xg(y = 35:42, z = 0:3)
 predict_post_xg <- function(y, z)
 {
-  shots <- data.frame(y = y, z = z)
+  shots <- data.frame(y_end_proj = y, z_end_proj = z)
   ifelse(
-    is_on_target(shots$y, shots$z),
+    is_on_target(shots$y_end_proj, shots$z_end_proj),
     predict(post_shot_xg_model, newdata = shots, type = "response"),
     0)
 }
