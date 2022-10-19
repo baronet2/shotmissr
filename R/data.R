@@ -120,9 +120,14 @@ project_shot_end_coords <- function(data)
       duration = pmin(duration, 4), # 4 from looking at histogram of original durations
       t_end_proj = duration * (x_goal_line() - x_start) / (x_end - x_start),
       # TODO Finish this stuff (see https://github.com/baronet2/UofT-TFC-Off-Target-Shots/blob/main/utilities/features/shot_trajectory.py)
-      z_velocity_start = (z_end - z_start + (gravity() / 2) * (duration ^ 2)) / duration,
+      # z_velocity_start = (z_end - z_start + (gravity() / 2) * (duration ^ 2)) / duration,
       z_end_proj = z_end
-    )
+    ) |>
+    dplyr::mutate(
+      y_end_proj = ifelse(x_start < x_end, y_end_proj, NA_real_),
+      z_end_proj = ifelse(x_start < x_end, z_end_proj, NA_real_)
+    ) |>
+    dplyr::select(-c(duration, t_end_proj))
 }
 
 
