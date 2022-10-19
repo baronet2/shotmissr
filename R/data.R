@@ -14,7 +14,7 @@ adjust_shot_end_coords <- function(data)
   .adjust_x_end <- function(data) {
     data %>%
       dplyr::mutate(
-        x_end = ifelse(outcome %in% c('Goal', 'Off T', 'Post'), x_end, x_goal_line())
+        x_end = ifelse(outcome %in% c('Goal', 'Off T', 'Post'), x_goal_line(), x_end)
       )
   }
 
@@ -35,11 +35,11 @@ adjust_shot_end_coords <- function(data)
         y_end = dplyr::case_when(
           x_end != x_goal_line() ~ y_end,
           condition == 1 ~ y_end,
-          condition == 2 ~ scales::rescale(y_end, c(min(y_end), 35.85)),
+          condition == 2 ~ scales::rescale(y_end, c(min(y_end, na.rm = TRUE), 35.85)),
           condition == 3 ~ scales::rescale(y_end, c(35.85, 36)),
           condition == 4 ~ scales::rescale(y_end, c(36, 43.9)),
           condition == 5 ~ scales::rescale(y_end, c(44, 44.15)),
-          condition == 6 ~ scales::rescale(y_end, c(44.15, max(y_end)))
+          condition == 6 ~ scales::rescale(y_end, c(44.15, max(y_end, na.rm = TRUE)))
         )
       ) |>
       dplyr::ungroup() |>
