@@ -15,27 +15,18 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(shotmissr)
+# devtools::load_all()
 ```
 
+## Table 1
 ```{r}
 statsbomb_shots_processed |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
 ```
 
+## Figure 1
 ```{r}
-statsbomb_shots |>
-  dplyr::filter(League == "MLS", Season == 2018) |>
-  dplyr::filter(!is.na(z_end)) |>
-  ggplot2::ggplot() +
-  ggplot2::geom_point(mapping = ggplot2::aes(
-    x = y_end,
-    y = z_end,
-    color = outcome)) +
-  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
-
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -48,9 +39,10 @@ statsbomb_shots_processed |>
   ggplot2::theme_bw()
 ```
 
+## Figure 2
 
 ```{r}
-statsbomb_shots |>
+statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
@@ -68,13 +60,14 @@ statsbomb_shots_processed |>
   dplyr::filter(grepl("Saved", outcome)) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
-    x = y_end,
-    y = z_end,
+    x = y_end_proj,
+    y = z_end_proj,
     color = outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   ggplot2::theme_bw()
 ```
 
+## Figure 5 
 ```{r}
 yy <- seq(y_left_post(), y_right_post(), by = 0.1)
 zz <- seq(0, z_crossbar(), by = 0.03)
@@ -89,3 +82,104 @@ shots |>
   plot_goalposts(color = "red", cex = 2) +
   ggplot2::theme_bw()
 ```
+
+## Figure 7
+
+```{r}
+statsbomb_shots |>
+  dplyr::filter(League == "MLS", Season == 2018) |>
+  dplyr::filter(!is.na(z_end)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+## Figure 8
+
+```{r}
+z_target <- sort(unique(Hunter_et_al_2018_shots$target_height_yards))
+get_execution_error_covariance(z_target[1])
+get_execution_error_covariance(z_target[2])
+
+yy = seq(34, 46, length.out = 100)
+zz = seq(0, 4, length.out = 100)
+yz = expand.grid(y = yy, z = zz)
+
+gaussians <- yz |>
+  dplyr::mutate(
+    prob_low = tmvtnorm::dtmvnorm(
+      x = as.matrix(yz),
+      mean = c(y_center_line(), z_target[1]), 
+      sigma = get_execution_error_covariance(z_target[1]), 
+      lower = c(-Inf, 0)
+    ),
+    prob_high = tmvtnorm::dtmvnorm(
+      x = as.matrix(yz),
+      mean = c(y_center_line(), z_target[2]), 
+      sigma = get_execution_error_covariance(z_target[2]), 
+      lower = c(-Inf, 0)
+    )
+  )
+
+Hunter_et_al_2018_shots |>
+  # Get low-target shots
+  dplyr:::filter(target_height_yards == z_target[1]) |>
+  dplyr::mutate(
+    y_end = y_center_line() + horizontal_error_yards,
+    z_end = target_height_yards + vertical_error_yards
+  ) |>
+  ggplot2::ggplot() +
+  # Add contour plot of Gaussian
+  ggplot2::geom_contour_filled(
+    data = gaussians,
+    mapping = ggplot2::aes(x = y, y = z, z = prob_low),
+    breaks = seq(0.01, 0.7, by = 0.07)
+  ) +
+  # Make Gaussian contour colour blue
+  ggplot2::scale_fill_brewer() +
+  # Add observed shots
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = y_end,
+      y = z_end), 
+    colour = "orange", size = 0.5
+  ) +
+  # Add target location
+  ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+
+Hunter_et_al_2018_shots |>
+  # Get high-target shots
+  dplyr:::filter(target_height_yards == z_target[2]) |>
+  dplyr::mutate(
+    y_end = y_center_line() + horizontal_error_yards,
+    z_end = target_height_yards + vertical_error_yards
+  ) |>
+  ggplot2::ggplot() +
+  # Add contour plot of Gaussian
+  ggplot2::geom_contour_filled(
+    data = gaussians,
+    mapping = ggplot2::aes(x = y, y = z, z = prob_high),
+    breaks = seq(0.01, 0.3, by = 0.03)
+  ) +
+  # Make Gaussian contour colour blue
+  ggplot2::scale_fill_brewer() +
+  # Add observed shots
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(
+      x = y_end,
+      y = z_end), 
+    colour = "orange", size = 0.5
+  ) +
+  # Add target location
+  ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+
+```
+
