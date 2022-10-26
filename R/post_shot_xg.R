@@ -20,8 +20,8 @@ filter_post_xg_shots <- function(data)
 #' @description Predict the probability of a goal given the shot details and
 #' post-shot expected goals model.
 #'
-#' @param data A data frame with shot details
-#' @param model A fit glm model used to predict post-shot expected goals values
+#' @param y Vector of shot end y-coordinates, in yards
+#' @param z Vector of shot end z-coordinates, in yards
 #'
 #' @return The same data with only shots used to train the post-shot expected goals model.
 #'
