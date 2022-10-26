@@ -1,0 +1,91 @@
+---
+title: "Miss It Like Messi"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Miss It Like Messi}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(shotmissr)
+```
+
+```{r}
+statsbomb_shots_processed |>
+  dplyr::group_by(League, Season) |>
+  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
+```
+
+```{r}
+statsbomb_shots |>
+  dplyr::filter(League == "MLS", Season == 2018) |>
+  dplyr::filter(!is.na(z_end)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+
+statsbomb_shots_processed |>
+  dplyr::filter(League == "MLS", Season == 2018) |>
+  dplyr::filter(!is.na(z_end)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+
+```{r}
+statsbomb_shots |>
+  dplyr::filter(League == "USL", Season == 2020) |>
+  dplyr::filter(!is.na(z_end)) |>
+  dplyr::filter(grepl("Saved", outcome)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+
+statsbomb_shots_processed |>
+  dplyr::filter(League == "USL", Season == 2020) |>
+  dplyr::filter(!is.na(z_end)) |>
+  dplyr::filter(grepl("Saved", outcome)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(mapping = ggplot2::aes(
+    x = y_end,
+    y = z_end,
+    color = outcome)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+```{r}
+yy <- seq(y_left_post(), y_right_post(), by = 0.1)
+zz <- seq(0, z_crossbar(), by = 0.03)
+shots <- expand.grid(y = yy, z = zz)
+shots |>
+  dplyr::mutate(post_shot_xg = predict_post_xg(y, z)) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_contour_filled(mapping = ggplot2::aes(
+    x = y,
+    y = z,
+    z = post_shot_xg), bins = 100, show.legend = FALSE) +
+  plot_goalposts(color = "red", cex = 2) +
+  ggplot2::theme_bw()
+```

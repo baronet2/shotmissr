@@ -10,11 +10,94 @@
 #' @export
 adjust_shot_end_coords <- function(data)
 {
-  # TODO Implement. See https://github.com/baronet2/UofT-TFC-Off-Target-Shots/blob/main/utilities/data_preparer.py
+
+  .adjust_x_end <- function(data) {
+    data %>%
+      dplyr::mutate(
+        x_end = ifelse(outcome %in% c('Goal', 'Off T', 'Post'), x_goal_line(), x_end)
+      )
+  }
+
+  .adjust_y_end <- function(data) {
+    data %>%
+      dplyr::mutate(
+        condition = dplyr::case_when(
+          z_end > 3.2 ~ 1, # High ball - don't adjust
+          y_end < 35.6 ~ 2, # Left of goal
+          y_end <= 35.8  ~ 3, # Left post
+          y_end <= 44 ~ 4, # dplyr::between posts
+          y_end < 44.8 ~ 5, # Right post
+          TRUE ~ 6 # Right of goal
+        ),
+      ) %>%
+      dplyr::group_by(condition) %>%
+      dplyr::mutate(
+        y_end = dplyr::case_when(
+          x_end != x_goal_line() ~ y_end,
+          condition == 1 ~ y_end,
+          condition == 2 ~ scales::rescale(y_end, c(min(y_end, na.rm = TRUE), 35.85)),
+          condition == 3 ~ scales::rescale(y_end, c(35.85, 36)),
+          condition == 4 ~ scales::rescale(y_end, c(36, 43.9)),
+          condition == 5 ~ scales::rescale(y_end, c(44, 44.15)),
+          condition == 6 ~ scales::rescale(y_end, c(44.15, max(y_end, na.rm = TRUE)))
+        )
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::select(-condition)
+  }
+
+  .adjust_z_end <- function(data) {
+    data  |>
+      dplyr::mutate(
+        condition = dplyr::case_when(
+          dplyr::between(z_end, 1.3, 2.4) & dplyr::between(y_end, 35.6, 44.6) ~ 1,
+          dplyr::between(z_end, 2.7, 3) ~ 2,
+          dplyr::between(z_end, 3, 3.2) ~ 3,
+          z_end > 3.2 ~ 4,
+          TRUE ~ 5
+        )
+      ) |>
+      dplyr::group_by(condition) |>
+      dplyr::mutate(
+        z_end = dplyr::case_when(
+          condition == 1 ~ scales::rescale(z_end, c(1.2, 2.6)),
+          condition == 2 ~ scales::rescale(z_end, c(2.7, 2.8)),
+          condition == 3 ~ scales::rescale(z_end, c(2.8, 2.9)),
+          condition == 4 ~ scales::rescale(z_end, c(2.9, 7.8)),
+          condition == 5 ~ z_end
+        )
+      ) |>
+      dplyr::ungroup() |>
+      dplyr::select(-condition)
+  }
+
+  .adjust_z_start <- function(data) {
+    data  |>
+      # Fill NA z_start with mean z_Start for that body-part and technique
+      dplyr::group_by(body_part, technique) |>
+      dplyr::mutate(
+        z_start = dplyr::case_when(
+          is.na(z_start) ~ mean(z_start, na.rm = TRUE),
+          TRUE ~ z_start
+        )
+      ) |>
+      dplyr::ungroup() |>
+      # If still NA, use mean z_Start for that body-part
+      dplyr::group_by(body_part) |>
+        dplyr::mutate(
+          z_start = dplyr::case_when(
+            is.na(z_start) ~ mean(z_start, na.rm = TRUE),
+            TRUE ~ z_start
+          )
+        ) |>
+        dplyr::ungroup()
+  }
+
   data %>%
-    dplyr::mutate(
-      x_end = ifelse(outcome %in% c('Goal', 'Off T', 'Post'), x_end, x_goal_line())
-    )
+    .adjust_x_end() |>
+    .adjust_y_end() |>
+    .adjust_z_end() |>
+    .adjust_z_start()
 }
 
 
@@ -31,12 +114,20 @@ adjust_shot_end_coords <- function(data)
 #' @export
 project_shot_end_coords <- function(data)
 {
-  # TODO Implement. See https://github.com/baronet2/UofT-TFC-Off-Target-Shots/blob/main/utilities/features/shot_trajectory.py
   data %>%
     dplyr::mutate(
-      y_end_proj = y_end,
+      y_end_proj = y_start + (x_goal_line() - x_start) * (y_end - y_start) / (x_end - x_start),
+      duration = pmin(duration, 4), # 4 from looking at histogram of original durations
+      t_end_proj = duration * (x_goal_line() - x_start) / (x_end - x_start),
+      # TODO Finish this stuff (see https://github.com/baronet2/UofT-TFC-Off-Target-Shots/blob/main/utilities/features/shot_trajectory.py)
+      # z_velocity_start = (z_end - z_start + (gravity() / 2) * (duration ^ 2)) / duration,
       z_end_proj = z_end
-    )
+    ) |>
+    dplyr::mutate(
+      y_end_proj = ifelse(x_start < x_end, y_end_proj, NA_real_),
+      z_end_proj = ifelse(x_start < x_end, z_end_proj, NA_real_)
+    ) |>
+    dplyr::select(-c(duration, t_end_proj))
 }
 
 
@@ -49,11 +140,13 @@ project_shot_end_coords <- function(data)
 #' @param data A data frame with shot details
 #'
 #' @return The same data frame with some rows removed
+#'
+#' @export
 filter_shooting_skill_data <- function(data)
 {
   data %>%
     dplyr::filter(
-      distance >= 15,
+      # TODO distance >= 15,
       SBPreXg < 0.1
     )
 }
@@ -72,9 +165,9 @@ flip_left_foot_shot_end_coords <- function(data)
 {
   data %>%
     dplyr::mutate(
-      y_end_proj = ifelse(y_end_proj > center_line_y(),
+      y_end_proj = ifelse(y_end_proj > y_center_line(),
                           y_end_proj,
-                          2 * center_line_y() - y_end_proj)
+                          2 * y_center_line() - y_end_proj)
     )
 }
 

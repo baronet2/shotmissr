@@ -32,4 +32,7 @@ LinkingTo:
     StanHeaders (>= 2.18.0)
 SystemRequirements: GNU make
 Suggests: 
-    data.table (>= 1.14.2)
+    data.table (>= 1.14.2),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

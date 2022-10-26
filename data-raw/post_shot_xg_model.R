@@ -30,7 +30,7 @@ data <- statsbomb_shots_processed %>%
                 y = y_end_proj,
                 z = z_end_proj)
 
-post_shot_xg_model <- glm(Goal ~ stats::poly(y, 3) + stats::poly(z, 3), data = data, family = "binomial") %>%
+post_shot_xg_model <- glm(Goal ~ stats::poly(y_end_proj, 3) + stats::poly(z_end_proj, 3), data = data, family = "binomial") %>%
   stripGlmLR()
 
 usethis::use_data(post_shot_xg_model, overwrite = TRUE)
