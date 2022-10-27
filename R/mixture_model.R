@@ -1,4 +1,4 @@
-#' Get grid of truncated bivariate Gaussian components
+#' Get bivariate Gaussian mixture model components
 #'
 #' The means of the components are evenly-spaced points along a grid within the goal frame.
 #' The covariance matrices of the components are based on empirical observations of
@@ -14,7 +14,7 @@
 #' covariance matrix.
 #'
 #' @export
-get_trunc_component_grid <- function(num_y = 11, num_z = 6, lambdas = c(1.0, 3.8)) {
+get_mixture_model_components <- function(num_y = 11, num_z = 6, lambdas = c(1.0, 3.8)) {
   means_y <- seq(y_left_post(), y_right_post(), length.out = num_y + 2)[2:(num_y+1)]
   means_z <- seq(0, z_crossbar(), length.out = num_z + 2)[2:(num_z+1)]
   expand.grid(y = means_y, z = means_z, lambda = lambdas) |>
