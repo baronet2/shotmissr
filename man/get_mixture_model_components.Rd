@@ -14,9 +14,8 @@ get_mixture_model_components(num_y = 11, num_z = 6, lambdas = c(1, 3.8))
 \item{lambdas}{A numeric vector containing the scaling factors for each layer}
 }
 \value{
-Data frame with columns (y, z) indicating the component mean,
-lambda indicating the associated lambda value, and cov indicating the
-covariance matrix.
+Data frame with columns mean, lambda, and cov indicating the component
+mean, associated lambda value for scaling, and (scaled) covariance matrix.
 }
 \description{
 The means of the components are evenly-spaced points along a grid within the goal frame.
