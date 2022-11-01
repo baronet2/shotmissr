@@ -58,3 +58,34 @@ get_component_values <- function(mixture_model_components, n_samples = 100) {
     dplyr::select(-samples, -values)
 }
 
+
+#' Get shot probability densities
+#'
+#' Get a matrix with the density function for each shot and each component.
+#'
+#' @param mixture_model_components A data.frame with m rows and columns mean and
+#' cov representing the mean vector and covariance matrix for each component.
+#' @param shots An n x 2 matrix with the columns representing the y- and z-coordinates respecitvely.
+#'
+#' @return An n x m matrix with the (i, j) entry containing the probability density
+#' function of the i'th shot for the j'th mixture model component.
+#'
+#' @export
+get_shot_probability_densities <- function(mixture_model_components, shots) {
+  # TODO Use apply instead of iteration
+
+  pdfs <- matrix(nrow = nrow(shots), ncol = nrow(mixture_model_components))
+
+  for (i in 1:nrow(mixture_model_components)) {
+    pdfs[,i] <- tmvtnorm::dtmvnorm(
+      as.matrix(shots),
+      mean = mixture_model_components$mean[[i]],
+      sigma = mixture_model_components$cov[[i]],
+      lower = c(-Inf, 0)
+    )
+  }
+
+  pdfs
+}
+
+
