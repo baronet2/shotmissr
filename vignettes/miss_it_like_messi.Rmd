@@ -183,3 +183,34 @@ Hunter_et_al_2018_shots |>
 
 ```
 
+## Global Weights
+
+```{r}
+mixture_model_components <- get_mixture_model_components() |>
+  get_component_values()
+
+pdfs <- get_shot_probability_densities(
+  head(mixture_model_components, 3),
+  head(yz, 5)
+)
+
+global_weights <- fit_global_weights(pdfs)
+global_weights
+
+threshold <- 0
+selected_components <- which(global_weights > threshold)
+selected_components
+```
+
+## Player Weights
+
+```{r}
+player_weights <- fit_player_weights(
+  pdfs[, selected_components],
+  rep(1, 5),
+  global_weights[selected_components],
+  alpha = Inf
+)
+player_weights
+```
+
