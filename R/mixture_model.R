@@ -88,4 +88,56 @@ get_shot_probability_densities <- function(mixture_model_components, shots) {
   pdfs
 }
 
+#' Fit global component weights
+#'
+#' Given a matrix containing the probability density functions for each shot and
+#' component pair, fit the mixture model weights of the component for the global
+#' mixture model.
+#'
+#' @param pdfs An n x m matrix with the (i, j) entry containing the probability
+#' density function of the i'th shot for the j'th mixture model component.
+#'
+#' @return A vector of length m indicating the mixture weights of each component.
+#'
+#' @export
+fit_global_weights <- function(pdfs) {
+  # TODO Create Stan file, follow https://mc-stan.org/rstantools/articles/minimal-rstan-package.html
+  # global_weights <- fit_global_weights(pdfs) # Calls Stan
 
+  colMeans(pdfs) / sum(colMeans(pdfs))
+}
+
+#' Fit player component weights
+#'
+#' Given a matrix containing the probability density functions for each shot and
+#' component pair, fit the mixture model weights of the component for the global
+#' mixture model.
+#'
+#' @param pdfs An n x k matrix with the (i, j) entry containing the probability
+#' density function of the i'th shot for the j'th mixture model component.
+#' @param player_labels An integer vector of length n indicating the player associated with
+#' each shot. If there are p players, player_labels should contain only the
+#' integers 1 through p.
+#' @param global_weights A vector of length k indicating the weights of each
+#' component for the global mixture model.
+#' @param alpha A number representing the degree to which player weights are
+#' shrunk towards the global weights. alpha = 0 corresponds to no shrinkage,
+#' while alpha = Inf will force all players to have the global weights.
+#'
+#' @return A p x k matrix with the (i, j) entry corresponding to the weight of
+#' the j'th component for player i.
+#'
+#' @export
+fit_player_weights <- function(pdfs, player_labels, global_weights, alpha = 30) {
+  if (alpha == Inf) {
+    matrix(
+      rep(global_weights, length(global_weights)),
+      ncol = length(global_weights),
+      byrow = TRUE
+    )
+  } else if (alpha == 0) {
+    stop("Not implemented yet. Use colMeans indexed for player's shots")
+  } else {
+    stop("Not implemented yet. Call Stan")
+  }
+}
