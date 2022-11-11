@@ -131,13 +131,15 @@ fit_global_weights <- function(pdfs) {
 fit_player_weights <- function(pdfs, player_labels, global_weights, alpha = 30) {
   if (alpha == Inf) {
     matrix(
-      rep(global_weights, length(global_weights)),
+      rep(global_weights, max(player_labels)),
       ncol = length(global_weights),
       byrow = TRUE
     )
   } else if (alpha == 0) {
+    # TODO Implement
     stop("Not implemented yet. Use colMeans indexed for player's shots")
   } else {
+    # TODO Implement
     stop("Not implemented yet. Call Stan")
   }
 }
