@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-# devtools::load_all()
+devtools::load_all()
 ```
 
 ## Table 1
@@ -183,34 +183,66 @@ Hunter_et_al_2018_shots |>
 
 ```
 
-## Global Weights
+## Pipeline
 
 ```{r}
-mixture_model_components <- get_mixture_model_components() |>
-  get_component_values()
+# Note: mixture_model_components and global_weights should already be filtered
+pipeline <- function(
+    shots_data,
+    grouping_cols = c("player"),
+    group_size_threshold = 30,
+    mixture_model_components,
+    global_weights,
+    alpha = Inf
+  ) {
+  shooting_skill_data <- shots_data |>
+    dplyr::group_by(dplyr::all_of(grouping_cols)) |>
+    dplyr::filter(dplyr::n() >= group_size_threshold) |>
+    dplyr::mutate(group_id = dplyr::cur_group_id()) |>
+    dplyr::ungroup()
+  
+  shots <- as.matrix(shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj))
+  
+  pdfs <- get_shot_probability_densities(
+    mixture_model_components,
+    shots
+  )
+  
+  player_weights <- fit_player_weights(
+    pdfs,
+    shooting_skill_data$group_id,
+    global_weights,
+    alpha = Inf
+  )
+  
+  player_rb_post_xg <- data.frame(
+    group_id = 1:max(shooting_skill_data$group_id),
+    player_rb_post_xg = player_weights %*% mixture_model_components$value
+  )
+  
+  shooting_metrics <- shooting_skill_data |>
+    dplyr::inner_join(player_rb_post_xg, by = "group_id") |>
+    dplyr::mutate(gen_post_xg = pdfs %*% mixture_model_components$value)
+  
+  shooting_metrics
+}
+
+shots_data <- statsbomb_shots_processed |>
+  dplyr::filter(!is.na(z_end_proj)) |>
+  head(1000)
 
 pdfs <- get_shot_probability_densities(
-  head(mixture_model_components, 3),
-  head(yz, 5)
+  mixture_model_components,
+  shots = shots_data |>
+    dplyr::select(y_end_proj, z_end_proj) |>
+    as.matrix()
 )
-
 global_weights <- fit_global_weights(pdfs)
-global_weights
+selected_components <- which(global_weights > 0.012)
 
-threshold <- 0
-selected_components <- which(global_weights > threshold)
-selected_components
-```
-
-## Player Weights
-
-```{r}
-player_weights <- fit_player_weights(
-  pdfs[, selected_components],
-  rep(1, 5),
-  global_weights[selected_components],
-  alpha = Inf
+metrics <- pipeline(
+  shots_data = shots_data,
+  mixture_model_components = mixture_model_components[selected_components,],
+  global_weights = global_weights[selected_components]
 )
-player_weights
 ```
-
