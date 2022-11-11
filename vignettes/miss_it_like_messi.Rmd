@@ -226,7 +226,12 @@ pipeline <- function(
 
 shots_data <- statsbomb_shots_processed |>
   dplyr::filter(!is.na(z_end_proj)) |>
-  head(1000)
+  dplyr::group_by(player, Season) |>
+  dplyr::filter(dplyr::n() >= 50) |>
+  dplyr::ungroup()
+
+mixture_model_components <- get_mixture_model_components() |>
+  get_component_values()
 
 pdfs <- get_shot_probability_densities(
   mixture_model_components,
@@ -243,6 +248,32 @@ metrics <- pipeline(
   mixture_model_components = mixture_model_components[selected_components,],
   global_weights = global_weights[selected_components]
 )
-
-metrics
 ```
+
+## Interseason stability
+
+```{r}
+season_stats <- metrics |>
+  dplyr::group_by(player, Season) |>
+  dplyr::summarise(
+    dplyr::across(dplyr::matches("xg|xG"), mean, na.rm = TRUE),
+    .groups = "keep"
+  )
+
+season_stats |>
+  dplyr::inner_join(season_stats, by = c("player"), suffix = c("_a", "_b")) |>
+  dplyr::filter(Season_a + 1 == Season_b) |>
+  dplyr::ungroup() |>
+  # Get metrics only
+  dplyr::select(dplyr::matches("xg|Xg")) |>
+  # Get correlation matrix
+  cor() |>
+  # Subset correlation matrix so season A is rows and season B is columns
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_a")) |>
+  t() |>
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_b")) |>
+  as.matrix()
+```
+
