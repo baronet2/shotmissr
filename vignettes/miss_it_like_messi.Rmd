@@ -18,24 +18,15 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
+## Table 1
 ```{r}
 statsbomb_shots_processed |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
 ```
 
+## Figure 1
 ```{r}
-statsbomb_shots |>
-  dplyr::filter(League == "MLS", Season == 2018) |>
-  dplyr::filter(!is.na(z_end)) |>
-  ggplot2::ggplot() +
-  ggplot2::geom_point(mapping = ggplot2::aes(
-    x = y_end,
-    y = z_end,
-    color = outcome)) +
-  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
-
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -48,9 +39,10 @@ statsbomb_shots_processed |>
   ggplot2::theme_bw()
 ```
 
+## Figure 2
 
 ```{r}
-statsbomb_shots |>
+statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
@@ -68,13 +60,14 @@ statsbomb_shots_processed |>
   dplyr::filter(grepl("Saved", outcome)) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
-    x = y_end,
-    y = z_end,
+    x = y_end_proj,
+    y = z_end_proj,
     color = outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   ggplot2::theme_bw()
 ```
 
+## Figure 5 
 ```{r}
 yy <- seq(y_left_post(), y_right_post(), by = 0.1)
 zz <- seq(0, z_crossbar(), by = 0.03)
