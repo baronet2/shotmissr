@@ -7,9 +7,9 @@
 predict_post_xg(y, z)
 }
 \arguments{
-\item{data}{A data frame with shot details}
+\item{y}{Vector of shot end y-coordinates, in yards}
 
-\item{model}{A fit glm model used to predict post-shot expected goals values}
+\item{z}{Vector of shot end z-coordinates, in yards}
 }
 \value{
 The same data with only shots used to train the post-shot expected goals model.
