@@ -26,7 +26,7 @@ statsbomb_shots_processed |>
 ```
 
 ## Figure 1
-```{r}
+```{r, fig.width=8, fig.height = 6}
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -41,7 +41,7 @@ statsbomb_shots_processed |>
 
 ## Figure 2
 
-```{r}
+```{r, fig.width=8, fig.height = 6}
 statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -68,7 +68,7 @@ statsbomb_shots_processed |>
 ```
 
 ## Figure 5 
-```{r}
+```{r, fig.width=8, fig.height = 6}
 yy <- seq(y_left_post(), y_right_post(), by = 0.1)
 zz <- seq(0, z_crossbar(), by = 0.03)
 shots <- expand.grid(y = yy, z = zz)
@@ -85,7 +85,7 @@ shots |>
 
 ## Figure 7
 
-```{r}
+```{r, fig.width=8, fig.height = 6}
 statsbomb_shots |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -100,8 +100,9 @@ statsbomb_shots |>
 
 ## Figure 8
 
-```{r}
+```{r, fig.width=8, fig.height = 6}
 z_target <- sort(unique(Hunter_et_al_2018_shots$target_height_yards))
+cat("Execution error covariance matrices:")
 get_execution_error_covariance(z_target[1])
 get_execution_error_covariance(z_target[2])
 
@@ -183,7 +184,7 @@ Hunter_et_al_2018_shots |>
 
 ```
 
-## Pipeline
+## Pipeline to compute metrics
 
 ```{r}
 # Note: mixture_model_components and global_weights should already be filtered
