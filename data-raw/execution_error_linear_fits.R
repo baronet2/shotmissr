@@ -18,4 +18,4 @@ execution_error_linear_fits <- data.frame(thing = c("var_xx", "var_yy", "var_xy"
     ))
   )
 
-usethis::use_data(execution_error_linear_fits, overwrite = TRUE, internal = TRUE)
+usethis::use_data(execution_error_linear_fits, overwrite = TRUE)
