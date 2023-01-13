@@ -30,9 +30,10 @@ adjust_shot_end_coords <- function(data)
           TRUE ~ 6 # Right of goal
         ),
       ) %>%
-      dplyr::group_by(condition) %>%
+      dplyr::group_by(do_adjust_y, condition) %>%
       dplyr::mutate(
         y_end = dplyr::case_when(
+          !do_adjust_y ~ y_end,
           x_end != x_goal_line() ~ y_end,
           condition == 1 ~ y_end,
           condition == 2 ~ scales::rescale(y_end, c(min(y_end, na.rm = TRUE), 35.85)),
@@ -127,6 +128,10 @@ project_shot_end_coords <- function(data)
     dplyr::mutate(
       y_end_proj = ifelse(x_start < x_end, y_end_proj, NA_real_),
       z_end_proj = ifelse(x_start < x_end, z_end_proj, NA_real_)
+    ) |>
+    dplyr::mutate(
+      y_end_proj = ifelse(do_project_saved, y_end_proj, y_end),
+      z_end_proj = ifelse(do_project_saved, z_end_proj, z_end)
     ) |>
     dplyr::select(-c(duration, t_end_proj))
 }
