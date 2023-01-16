@@ -16,21 +16,21 @@ statsbomb_shots_processed |>
 #> # Groups:   League, Season [15]
 #>    League Season num_shots
 #>    <fct>   <int>     <int>
-#>  1 ARG      2019      5034
-#>  2 FR2      2018      6114
-#>  3 FR2      2019      4581
-#>  4 FR2      2020      5783
-#>  5 GR2      2018      5667
-#>  6 GR2      2019      5813
-#>  7 GR2      2020      5323
-#>  8 MLS      2018      7551
-#>  9 MLS      2019      8023
-#> 10 MLS      2020      5665
-#> 11 NED      2018      5934
-#> 12 NED      2019      4403
-#> 13 NED      2020      5379
-#> 14 USL      2019      3470
-#> 15 USL      2020      4768
+#>  1 ARG      2019      3675
+#>  2 FR2      2018      4405
+#>  3 FR2      2019      3386
+#>  4 FR2      2020      4243
+#>  5 GR2      2018      4065
+#>  6 GR2      2019      4189
+#>  7 GR2      2020      3787
+#>  8 MLS      2018      5383
+#>  9 MLS      2019      5811
+#> 10 MLS      2020      4071
+#> 11 NED      2018      4212
+#> 12 NED      2019      3235
+#> 13 NED      2020      3960
+#> 14 USL      2019      2503
+#> 15 USL      2020      3551
 ```
 
 ## Figure 1
@@ -312,12 +312,9 @@ season_stats |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix()
-#> Warning in
-#> cor(dplyr::select(dplyr::ungroup(dplyr::filter(dplyr::inner_join(season_stats, :
-#> the standard deviation is zero
-#>                SBPreXg_b SBPostXg_b rb_post_xg_b gen_post_xg_b
-#> SBPreXg_a      0.9170544  0.2333293           NA     0.6944394
-#> SBPostXg_a     0.9730401  0.7263681           NA     0.2121283
-#> rb_post_xg_a          NA         NA           NA            NA
-#> gen_post_xg_a -0.9186199 -0.2076382           NA    -0.5451333
+#>               SBPreXg_b SBPostXg_b rb_post_xg_b gen_post_xg_b
+#> SBPreXg_a            NA         NA           NA            NA
+#> SBPostXg_a           NA         NA           NA            NA
+#> rb_post_xg_a         NA         NA           NA            NA
+#> gen_post_xg_a        NA         NA           NA            NA
 ```

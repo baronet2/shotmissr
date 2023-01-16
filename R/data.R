@@ -150,10 +150,24 @@ project_shot_end_coords <- function(data)
 #' @export
 filter_shooting_skill_data <- function(data)
 {
+  euclidean_dist <- function(x1, y1, x2, y2) {
+    sqrt((x2 - x1)^2 + (y2 - y1)^2)
+  }
+
   data %>%
+    dplyr::mutate(
+      distance = euclidean_dist(
+        x_start, y_start, x_goal_line(),
+        dplyr::case_when(
+          y_start < y_left_post() ~ y_left_post(),
+          y_start > y_right_post() ~ y_right_post(),
+          TRUE ~ y_start
+        )
+      )
+    ) %>%
     dplyr::filter(
-      # TODO distance >= 15,
-      SBPreXg < 0.1
+      SBPreXg < 0.1,
+      dplyr::between(distance, 15, Inf)
     )
 }
 
