@@ -1,32 +1,41 @@
----
-title: "Miss It Like Messi"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Miss It Like Messi}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+Miss It Like Messi
+================
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-```{r setup}
+``` r
 devtools::load_all()
+#> i Loading shotmissr
 ```
 
 ## Table 1
-```{r}
+
+``` r
 statsbomb_shots_processed |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
+#> # A tibble: 15 x 3
+#> # Groups:   League, Season [15]
+#>    League Season num_shots
+#>    <fct>   <int>     <int>
+#>  1 ARG      2019      3675
+#>  2 FR2      2018      4405
+#>  3 FR2      2019      3386
+#>  4 FR2      2020      4243
+#>  5 GR2      2018      4065
+#>  6 GR2      2019      4189
+#>  7 GR2      2020      3787
+#>  8 MLS      2018      5383
+#>  9 MLS      2019      5811
+#> 10 MLS      2020      4071
+#> 11 NED      2018      4212
+#> 12 NED      2019      3235
+#> 13 NED      2020      3960
+#> 14 USL      2019      2503
+#> 15 USL      2020      3551
 ```
 
 ## Figure 1
-```{r}
+
+``` r
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -39,9 +48,11 @@ statsbomb_shots_processed |>
   ggplot2::theme_bw()
 ```
 
+![](miss_it_like_messi_files/figure-gfm/figure_1-1.png)<!-- -->
+
 ## Figure 2
 
-```{r}
+``` r
 statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -53,6 +64,11 @@ statsbomb_shots_processed |>
     color = outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   ggplot2::theme_bw()
+```
+
+![](miss_it_like_messi_files/figure-gfm/figure_2-1.png)<!-- -->
+
+``` r
 
 statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
@@ -67,8 +83,11 @@ statsbomb_shots_processed |>
   ggplot2::theme_bw()
 ```
 
-## Figure 5 
-```{r}
+![](miss_it_like_messi_files/figure-gfm/figure_2-2.png)<!-- -->
+
+## Figure 5
+
+``` r
 yy <- seq(y_left_post(), y_right_post(), by = 0.1)
 zz <- seq(0, z_crossbar(), by = 0.03)
 shots <- expand.grid(y = yy, z = zz)
@@ -83,9 +102,11 @@ shots |>
   ggplot2::theme_bw()
 ```
 
+![](miss_it_like_messi_files/figure-gfm/figure_5-1.png)<!-- -->
+
 ## Figure 7
 
-```{r}
+``` r
 statsbomb_shots |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -98,12 +119,22 @@ statsbomb_shots |>
   ggplot2::theme_bw()
 ```
 
+![](miss_it_like_messi_files/figure-gfm/figure_7-1.png)<!-- -->
+
 ## Figure 8
 
-```{r}
+``` r
 z_target <- sort(unique(Hunter_et_al_2018_shots$target_height_yards))
+cat("Execution error covariance matrices:")
+#> Execution error covariance matrices:
 get_execution_error_covariance(z_target[1])
+#>           [,1]      [,2]
+#> [1,] 0.7036574 0.1566326
+#> [2,] 0.1566326 0.2969795
 get_execution_error_covariance(z_target[2])
+#>           [,1]      [,2]
+#> [1,] 0.7815552 0.4417238
+#> [2,] 0.4417238 0.7419683
 
 yy = seq(34, 46, length.out = 100)
 zz = seq(0, 4, length.out = 100)
@@ -152,6 +183,11 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   ggplot2::theme_bw()
+```
+
+![](miss_it_like_messi_files/figure-gfm/figure_8-1.png)<!-- -->
+
+``` r
 
 Hunter_et_al_2018_shots |>
   # Get high-target shots
@@ -180,12 +216,13 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   ggplot2::theme_bw()
-
 ```
 
-## Pipeline
+![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
 
-```{r}
+## Pipeline to compute metrics
+
+``` r
 # Note: mixture_model_components and global_weights should already be filtered
 pipeline <- function(
     shots_data,
@@ -252,7 +289,7 @@ metrics <- pipeline(
 
 ## Interseason stability
 
-```{r}
+``` r
 season_stats <- metrics |>
   dplyr::group_by(player, Season) |>
   dplyr::summarise(
@@ -275,5 +312,9 @@ season_stats |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix()
+#>               SBPreXg_b SBPostXg_b rb_post_xg_b gen_post_xg_b
+#> SBPreXg_a            NA         NA           NA            NA
+#> SBPostXg_a           NA         NA           NA            NA
+#> rb_post_xg_a         NA         NA           NA            NA
+#> gen_post_xg_a        NA         NA           NA            NA
 ```
-

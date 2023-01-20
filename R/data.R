@@ -30,9 +30,10 @@ adjust_shot_end_coords <- function(data)
           TRUE ~ 6 # Right of goal
         ),
       ) %>%
-      dplyr::group_by(condition) %>%
+      dplyr::group_by(do_adjust_y, condition) %>%
       dplyr::mutate(
         y_end = dplyr::case_when(
+          !do_adjust_y ~ y_end,
           x_end != x_goal_line() ~ y_end,
           condition == 1 ~ y_end,
           condition == 2 ~ scales::rescale(y_end, c(min(y_end, na.rm = TRUE), 35.85)),
@@ -128,6 +129,10 @@ project_shot_end_coords <- function(data)
       y_end_proj = ifelse(x_start < x_end, y_end_proj, NA_real_),
       z_end_proj = ifelse(x_start < x_end, z_end_proj, NA_real_)
     ) |>
+    dplyr::mutate(
+      y_end_proj = ifelse(do_project_saved, y_end_proj, y_end),
+      z_end_proj = ifelse(do_project_saved, z_end_proj, z_end)
+    ) |>
     dplyr::select(-c(duration, t_end_proj))
 }
 
@@ -145,10 +150,24 @@ project_shot_end_coords <- function(data)
 #' @export
 filter_shooting_skill_data <- function(data)
 {
+  euclidean_dist <- function(x1, y1, x2, y2) {
+    sqrt((x2 - x1)^2 + (y2 - y1)^2)
+  }
+
   data %>%
+    dplyr::mutate(
+      distance = euclidean_dist(
+        x_start, y_start, x_goal_line(),
+        dplyr::case_when(
+          y_start < y_left_post() ~ y_left_post(),
+          y_start > y_right_post() ~ y_right_post(),
+          TRUE ~ y_start
+        )
+      )
+    ) %>%
     dplyr::filter(
-      # TODO distance >= 15,
-      SBPreXg < 0.1
+      SBPreXg < 0.1,
+      dplyr::between(distance, 15, Inf)
     )
 }
 
