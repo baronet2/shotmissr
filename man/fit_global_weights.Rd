@@ -4,11 +4,13 @@
 \alias{fit_global_weights}
 \title{Fit global component weights}
 \usage{
-fit_global_weights(pdfs)
+fit_global_weights(pdfs, ...)
 }
 \arguments{
 \item{pdfs}{An n x m matrix with the (i, j) entry containing the probability
 density function of the i'th shot for the j'th mixture model component.}
+
+\item{...}{Arguments passed on to \link[rstan]{sampling}.}
 }
 \value{
 A vector of length m indicating the mixture weights of each component.

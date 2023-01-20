@@ -240,7 +240,7 @@ pdfs <- get_shot_probability_densities(
     dplyr::select(y_end_proj, z_end_proj) |>
     as.matrix()
 )
-global_weights <- fit_global_weights(pdfs)
+global_weights <- fit_global_weights(pdfs, chains = 1, iter = 1000, seed = 42)
 selected_components <- which(global_weights > 0.012)
 
 metrics <- pipeline(

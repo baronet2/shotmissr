@@ -96,15 +96,22 @@ get_shot_probability_densities <- function(mixture_model_components, shots) {
 #'
 #' @param pdfs An n x m matrix with the (i, j) entry containing the probability
 #' density function of the i'th shot for the j'th mixture model component.
+#' @param ... Arguments passed on to \link[rstan]{sampling}.
 #'
 #' @return A vector of length m indicating the mixture weights of each component.
 #'
 #' @export
-fit_global_weights <- function(pdfs) {
-  # TODO Create Stan file, follow https://mc-stan.org/rstantools/articles/minimal-rstan-package.html
-  # global_weights <- fit_global_weights(pdfs) # Calls Stan
+fit_global_weights <- function(pdfs, ...) {
+  standata <- list(
+    num_shots = nrow(pdfs),
+    num_components = ncol(pdfs),
+    trunc_pdfs = pdfs
+  )
+  out <- rstan::sampling(stanmodels$global_mm_weights, data = standata, ...)
 
-  colMeans(pdfs) / sum(colMeans(pdfs))
+  out |>
+    rstan::get_posterior_mean(pars = "global_weights") |>
+    as.vector()
 }
 
 #' Fit player component weights
