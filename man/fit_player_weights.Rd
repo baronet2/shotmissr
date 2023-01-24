@@ -4,7 +4,7 @@
 \alias{fit_player_weights}
 \title{Fit player component weights}
 \usage{
-fit_player_weights(pdfs, player_labels, global_weights, alpha = 30)
+fit_player_weights(pdfs, player_labels, alpha = 30, global_weights = NULL, ...)
 }
 \arguments{
 \item{pdfs}{An n x k matrix with the (i, j) entry containing the probability
@@ -14,16 +14,20 @@ density function of the i'th shot for the j'th mixture model component.}
 each shot. If there are p players, player_labels should contain only the
 integers 1 through p.}
 
-\item{global_weights}{A vector of length k indicating the weights of each
-component for the global mixture model.}
-
 \item{alpha}{A number representing the degree to which player weights are
 shrunk towards the global weights. alpha = 0 corresponds to no shrinkage,
 while alpha = Inf will force all players to have the global weights.}
+
+\item{global_weights}{A vector of length k indicating the weights of each
+component for the global mixture model. Used only if \code{alpha = Inf}.}
+
+\item{...}{Arguments passed on to \link[rstan]{sampling}.}
 }
 \value{
-A p x k matrix with the (i, j) entry corresponding to the weight of
-the j'th component for player i.
+A list with two elements. The first element is a vector of length k
+indicating the posterior mean weights of the global mixture model. The second
+element is a p x k matrix with the (i, j) entry corresponding to the weight
+of the j'th component for player i.
 }
 \description{
 Given a matrix containing the probability density functions for each shot and

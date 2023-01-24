@@ -194,7 +194,7 @@ pipeline <- function(
     group_size_threshold = 30,
     mixture_model_components,
     global_weights,
-    alpha = Inf
+    alpha = 30
   ) {
   shooting_skill_data <- shots_data |>
     dplyr::group_by(dplyr::across(dplyr::all_of(grouping_cols))) |>
@@ -216,9 +216,11 @@ pipeline <- function(
   player_weights <- fit_player_weights(
     pdfs,
     shooting_skill_data$group_id,
-    global_weights,
-    alpha = alpha
-  )
+    alpha = alpha,
+    chains = 1,
+    iter = 1000,
+    seed = 42
+  )$player_weights
   
   shooting_skill_data |>
     load_rb_post_xg(player_weights, mixture_model_components) |>

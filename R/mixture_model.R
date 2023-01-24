@@ -125,17 +125,20 @@ fit_global_weights <- function(pdfs, ...) {
 #' @param player_labels An integer vector of length n indicating the player associated with
 #' each shot. If there are p players, player_labels should contain only the
 #' integers 1 through p.
-#' @param global_weights A vector of length k indicating the weights of each
-#' component for the global mixture model.
 #' @param alpha A number representing the degree to which player weights are
 #' shrunk towards the global weights. alpha = 0 corresponds to no shrinkage,
 #' while alpha = Inf will force all players to have the global weights.
+#' @param global_weights A vector of length k indicating the weights of each
+#' component for the global mixture model. Used only if \code{alpha = Inf}.
+#' @param ... Arguments passed on to \link[rstan]{sampling}.
 #'
-#' @return A p x k matrix with the (i, j) entry corresponding to the weight of
-#' the j'th component for player i.
+#' @return A list with two elements. The first element is a vector of length k
+#' indicating the posterior mean weights of the global mixture model. The second
+#' element is a p x k matrix with the (i, j) entry corresponding to the weight
+#' of the j'th component for player i.
 #'
 #' @export
-fit_player_weights <- function(pdfs, player_labels, global_weights, alpha = 30) {
+fit_player_weights <- function(pdfs, player_labels, alpha = 30, global_weights = NULL, ...) {
   if (alpha == Inf) {
     matrix(
       rep(global_weights, max(player_labels)),
@@ -146,7 +149,23 @@ fit_player_weights <- function(pdfs, player_labels, global_weights, alpha = 30) 
     # TODO Implement
     stop("Not implemented yet. Use colMeans indexed for player's shots")
   } else {
-    # TODO Implement
-    stop("Not implemented yet. Call Stan")
+    standata <- list(
+      num_players = max(player_labels),
+      num_shots = nrow(pdfs),
+      num_components = ncol(pdfs),
+      shot_players = player_labels,
+      trunc_pdfs = pdfs,
+      alpha = alpha
+    )
+    out <- rstan::sampling(stanmodels$player_mm_weights, data = standata, ...)
+
+    global_weights <- out |>
+      rstan::get_posterior_mean(pars = "global_weights") |>
+      as.vector()
+    player_weights <- out |>
+      rstan::get_posterior_mean(pars = "player_weights") |>
+      matrix(nrow = max(player_labels), byrow = TRUE)
+
+    list(global_weights = global_weights, player_weights = player_weights)
   }
 }
