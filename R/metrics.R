@@ -39,6 +39,7 @@ load_rb_post_xg <- function(shooting_skill_data, player_weights, mixture_model_c
 #'
 #' @export
 load_gen_post_xg <- function(shooting_skill_data, pdfs, mixture_model_components) {
+  # TODO Calculate probability a shot came from each component given component weights and pdfs
   shooting_skill_data |>
     dplyr::mutate(gen_post_xg = pdfs %*% mixture_model_components$value)
 }

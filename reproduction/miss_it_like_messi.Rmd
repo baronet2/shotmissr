@@ -196,14 +196,10 @@ pipeline <- function(
     global_weights,
     alpha = 30
   ) {
-  shooting_skill_data <- shots_data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_cols))) |>
-    dplyr::filter(dplyr::n() >= group_size_threshold) |>
-    dplyr::mutate(group_id = dplyr::cur_group_id()) |>
-    dplyr::ungroup()
+  shooting_skill_data <- get_player_groups(shots_data, grouping_cols, group_size_threshold)
   
   if (nrow(shooting_skill_data) == 0) {
-    print("Could not run pipeline. No groups meet sample size threshold.")
+    stop("Could not run pipeline. No groups meet sample size threshold.")
   }
   
   shots <- as.matrix(shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj))
@@ -213,17 +209,18 @@ pipeline <- function(
     shots
   )
   
-  player_weights <- fit_player_weights(
+  mixture_model_fit <- fit_player_weights(
     pdfs,
     shooting_skill_data$group_id,
     alpha = alpha,
     chains = 1,
     iter = 1000,
     seed = 42
-  )$player_weights
+  )
   
   shooting_skill_data |>
-    load_rb_post_xg(player_weights, mixture_model_components) |>
+    load_rb_post_xg(mixture_model_fit$player_weights, mixture_model_components) |>
+    # TODO Correct when load_gen_post_xg is updated
     load_gen_post_xg(pdfs, mixture_model_components)
 }
 
