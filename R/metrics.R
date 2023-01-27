@@ -28,18 +28,25 @@ load_rb_post_xg <- function(shooting_skill_data, player_weights, mixture_model_c
 #' Load GenPostXg
 #'
 #' Adds a column `gen_post_xg` to a data frame of shots given the component weights
-#' and mixture model components.
+#' and values.
 #'
 #' @param shooting_skill_data A data frame with shot details and a `group_id`
 #' column indicating the grouping level at which player weights were fit.
 #' @param pdfs Output from \link{get_shot_probability_densities}.
-#' @param mixture_model_components Output from \link{get_mixture_model_components}.
+#' @param component_weights Vector of length k adding up to 1, indicating the
+#' mixture model weights for each component.
+#' @param component_values Vector of length k indicating the value of each
+#' mixture model component.
 #'
 #' @return The same shots data frame with a new column `gen_post_xg`.
 #'
 #' @export
-load_gen_post_xg <- function(shooting_skill_data, pdfs, mixture_model_components) {
-  # TODO Calculate probability a shot came from each component given component weights and pdfs
+load_gen_post_xg <- function(shooting_skill_data, pdfs, component_weights, component_values) {
+  # Multiply pdf for each component by its weight
+  weighted_pdfs <- t(t(pdfs) * component_weights)
+  # Normalize each row so each shot has cumulative probability of 1
+  component_probs <- t(apply(weighted_pdfs, 1, function(row) row / sum(row)))
+  # Add column with dot product of component probabilities and their weights
   shooting_skill_data |>
-    dplyr::mutate(gen_post_xg = pdfs %*% mixture_model_components$value)
+    dplyr::mutate(gen_post_xg = component_probs %*% component_values)
 }

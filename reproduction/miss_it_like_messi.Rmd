@@ -220,8 +220,7 @@ pipeline <- function(
   
   shooting_skill_data |>
     load_rb_post_xg(mixture_model_fit$player_weights, mixture_model_components) |>
-    # TODO Correct when load_gen_post_xg is updated
-    load_gen_post_xg(pdfs, mixture_model_components)
+    load_gen_post_xg(pdfs, mixture_model_fit$global_weights, mixture_model_components$value)
 }
 
 shots_data <- statsbomb_shots_processed |>
