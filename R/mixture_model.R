@@ -140,14 +140,30 @@ fit_global_weights <- function(pdfs, ...) {
 #' @export
 fit_player_weights <- function(pdfs, player_labels, alpha = 30, global_weights = NULL, ...) {
   if (alpha == Inf) {
-    matrix(
-      rep(global_weights, max(player_labels)),
-      ncol = length(global_weights),
-      byrow = TRUE
-    )
+    return(list(
+      global_weights = global_weights,
+      player_weights = matrix(
+        rep(global_weights, max(player_labels)),
+        ncol = length(global_weights),
+        byrow = TRUE
+      )
+    ))
   } else if (alpha == 0) {
-    # TODO Implement
-    stop("Not implemented yet. Use colMeans indexed for player's shots")
+    return(list(
+      global_weights = colMeans(pdfs),
+      player_weights = data.frame(pdfs) |>
+        dplyr::mutate(group_id = player_labels) |>
+        # Get mean of all columns by group_id
+        dplyr::group_by(group_id) |>
+        dplyr::summarise_all(mean, .groups = "drop") |>
+        # Sort by group_id and return matrix of means
+        dplyr::arrange(group_id) |>
+        dplyr::select(-group_id) |>
+        as.matrix() |>
+        apply(1, function(row)  row / sum(row)) |>
+        t() |>
+        unname()
+    ))
   } else {
     standata <- list(
       num_players = max(player_labels),
