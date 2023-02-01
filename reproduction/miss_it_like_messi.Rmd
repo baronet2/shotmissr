@@ -184,6 +184,40 @@ Hunter_et_al_2018_shots |>
 
 ```
 
+## Compute global weights
+
+```{r}
+shots_data <- statsbomb_shots_processed |>
+  prepare_shooting_skill_data()
+
+mixture_model_components <- get_mixture_model_components()
+
+pdfs <- get_shot_probability_densities(
+  mixture_model_components,
+  shots = shots_data |>
+    dplyr::select(y_end_proj, z_end_proj) |>
+    head(1000) |> # TODO Use full data
+    as.matrix()
+)
+
+global_weights <- fit_global_weights(pdfs, chains = 1, iter = 100, seed = 42)
+
+mixture_model_components |>
+  dplyr::mutate(
+    y = purrr::map_dbl(mean, ~.[[1]]),
+    z = purrr::map_dbl(mean, ~.[[2]]),
+    weight = global_weights,
+    lambda = as.factor(lambda)
+  ) |>
+  dplyr::filter(weight > 0.012) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  ggplot2::geom_point(colour = "blue") +
+  ggplot2::scale_size_manual(values = c(3, 7)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+
 ## Pipeline to compute metrics
 
 ```{r}

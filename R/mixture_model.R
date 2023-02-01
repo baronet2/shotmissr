@@ -77,12 +77,23 @@ get_shot_probability_densities <- function(mixture_model_components, shots) {
   pdfs <- matrix(nrow = nrow(shots), ncol = nrow(mixture_model_components))
 
   for (i in 1:nrow(mixture_model_components)) {
-    pdfs[,i] <- tmvtnorm::dtmvnorm(
-      as.matrix(shots),
+    # Compute cumulative density function for truncated distribution
+    # 1 would indicate that very little density lies below z = 0
+    truncation_factor <- mvtnorm::pmvnorm(
+      lower = c(-Inf, 0),
       mean = mixture_model_components$mean[[i]],
-      sigma = mixture_model_components$cov[[i]],
-      lower = c(-Inf, 0)
+      sigma = mixture_model_components$cov[[i]]
     )
+
+    # Compute density function for each shot
+    # Divide by truncation factor so more heavily truncated distributions
+    # (i.e. low truncation_factor) give higher densities.
+    pdfs[,i] <- mvtnorm::dmvnorm(
+      shots,
+      mean = mixture_model_components$mean[[i]],
+      sigma = mixture_model_components$cov[[i]]
+    ) / truncation_factor
+
   }
 
   pdfs

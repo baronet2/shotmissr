@@ -166,6 +166,8 @@ filter_shooting_skill_data <- function(data)
       )
     ) %>%
     dplyr::filter(
+      !is.na(y_end_proj),
+      !is.na(z_end_proj),
       SBPreXg < 0.1,
       dplyr::between(distance, 15, Inf)
     )
@@ -208,7 +210,7 @@ prepare_shooting_skill_data <- function(data)
 {
   data %>%
     filter_shooting_skill_data() %>%
-    flip_left_foot_shots()
+    flip_left_foot_shot_end_coords()
 }
 
 
