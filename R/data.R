@@ -140,8 +140,8 @@ project_shot_end_coords <- function(data)
 #' Filter shooting skill data
 #'
 #' @description Remove rows from the shots data that are not used to measure shooting skill.
-#' Specifically, keep only shots that are at least 15 yards from the goal and have a StatsBomb
-#' pre-shot expected goals value of less than 0.1.
+#' Specifically, keep only shots from at least 15 yards out that have a StatsBomb
+#' pre-shot expected goals value of less than 0.1 and valid shot end coordinates.
 #'
 #' @param data A data frame with shot details
 #'
@@ -185,9 +185,11 @@ flip_left_foot_shot_end_coords <- function(data)
 {
   data %>%
     dplyr::mutate(
-      y_end_proj = ifelse(y_end_proj > y_center_line(),
-                          y_end_proj,
-                          2 * y_center_line() - y_end_proj)
+      y_end_proj = ifelse(
+        body_part == "Left Foot",
+        2 * y_center_line() - y_end_proj,
+        y_end_proj
+      )
     )
 }
 
