@@ -7,18 +7,17 @@
 #' column indicating the grouping level at which player weights were fit.
 #' @param player_weights A p x k matrix with each row corresponding to the mixture
 #' model component weights associated with group p. Output from \link{fit_player_weights}.
-#' @param mixture_model_components A data frame with column `value` indicating the
-#' value of each component of the mixture model. Ordered the same as `player_weights`.
-#' Output from \link{get_mixture_model_components}.
+#' @param component_values Vector of length k indicating the value of each
+#' mixture model component.
 #'
 #' @return The same shots data frame with a new column `rb_post_xg`. The `rb_post_xg`
 #' values will be identical for any rows with identical `group_id`.
 #'
 #' @export
-load_rb_post_xg <- function(shooting_skill_data, player_weights, mixture_model_components) {
+load_rb_post_xg <- function(shooting_skill_data, player_weights, component_values) {
   rb_post_xg <- data.frame(
     group_id = 1:max(shooting_skill_data$group_id),
-    rb_post_xg = player_weights %*% mixture_model_components$value
+    rb_post_xg = player_weights %*% component_values
   )
 
   shooting_skill_data |>
