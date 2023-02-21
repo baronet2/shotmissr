@@ -4,7 +4,7 @@
 \alias{load_rb_post_xg}
 \title{Load RBPostXg}
 \usage{
-load_rb_post_xg(shooting_skill_data, player_weights, mixture_model_components)
+load_rb_post_xg(shooting_skill_data, player_weights, component_values)
 }
 \arguments{
 \item{shooting_skill_data}{A data frame with shot details and a \code{group_id}
@@ -13,9 +13,8 @@ column indicating the grouping level at which player weights were fit.}
 \item{player_weights}{A p x k matrix with each row corresponding to the mixture
 model component weights associated with group p. Output from \link{fit_player_weights}.}
 
-\item{mixture_model_components}{A data frame with column \code{value} indicating the
-value of each component of the mixture model. Ordered the same as \code{player_weights}.
-Output from \link{get_mixture_model_components}.}
+\item{component_values}{Vector of length k indicating the value of each
+mixture model component.}
 }
 \value{
 The same shots data frame with a new column \code{rb_post_xg}. The \code{rb_post_xg}

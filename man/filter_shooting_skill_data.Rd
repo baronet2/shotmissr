@@ -14,6 +14,6 @@ The same data frame with some rows removed
 }
 \description{
 Remove rows from the shots data that are not used to measure shooting skill.
-Specifically, keep only shots that are at least 15 yards from the goal and have a StatsBomb
-pre-shot expected goals value of less than 0.1.
+Specifically, keep only shots from at least 15 yards out that have a StatsBomb
+pre-shot expected goals value of less than 0.1 and valid shot end coordinates.
 }

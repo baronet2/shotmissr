@@ -184,76 +184,84 @@ Hunter_et_al_2018_shots |>
 
 ```
 
-## Pipeline to compute metrics
+## Compute full global weights
 
 ```{r}
-# Note: mixture_model_components and global_weights should already be filtered
-pipeline <- function(
-    shots_data,
-    grouping_cols = c("player"),
-    group_size_threshold = 30,
-    mixture_model_components,
-    global_weights,
-    alpha = Inf
-  ) {
-  shooting_skill_data <- shots_data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_cols))) |>
-    dplyr::filter(dplyr::n() >= group_size_threshold) |>
-    dplyr::mutate(group_id = dplyr::cur_group_id()) |>
-    dplyr::ungroup()
-  
-  if (nrow(shooting_skill_data) == 0) {
-    print("Could not run pipeline. No groups meet sample size threshold.")
-  }
-  
-  shots <- as.matrix(shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj))
-  
-  pdfs <- get_shot_probability_densities(
-    mixture_model_components,
-    shots
-  )
-  
-  player_weights <- fit_player_weights(
-    pdfs,
-    shooting_skill_data$group_id,
-    global_weights,
-    alpha = alpha
-  )
-  
-  shooting_skill_data |>
-    load_rb_post_xg(player_weights, mixture_model_components) |>
-    load_gen_post_xg(pdfs, mixture_model_components)
-}
-
 shots_data <- statsbomb_shots_processed |>
-  dplyr::filter(!is.na(z_end_proj)) |>
-  dplyr::group_by(player, Season) |>
-  dplyr::filter(dplyr::n() >= 50) |>
-  dplyr::ungroup()
+  prepare_shooting_skill_data()
 
-mixture_model_components <- get_mixture_model_components() |>
-  get_component_values()
+mixture_model_components <- get_mixture_model_components()
 
 pdfs <- get_shot_probability_densities(
   mixture_model_components,
   shots = shots_data |>
     dplyr::select(y_end_proj, z_end_proj) |>
+    head(1000) |> # TODO Use full data
     as.matrix()
 )
-global_weights <- fit_global_weights(pdfs)
+
+global_weights <- fit_global_weights(pdfs, chains = 1, iter = 100, seed = 42)
+
+mixture_model_components |>
+  dplyr::mutate(
+    y = purrr::map_dbl(mean, ~.[[1]]),
+    z = purrr::map_dbl(mean, ~.[[2]]),
+    weight = global_weights,
+    lambda = as.factor(lambda)
+  ) |>
+  dplyr::filter(weight > 0.012) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  ggplot2::geom_point(colour = "blue") +
+  ggplot2::scale_size_manual(values = c(3, 7)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+## Compute pruned global and player weights
+
+```{r}
+shooting_skill_data <- get_player_groups(shots_data, group_size_threshold = 50)
+
 selected_components <- which(global_weights > 0.012)
 
-metrics <- pipeline(
-  shots_data = shots_data,
-  group_size_threshold = 10,
-  mixture_model_components = mixture_model_components[selected_components,],
-  global_weights = global_weights[selected_components]
+pdfs <- get_shot_probability_densities(
+  mixture_model_components[selected_components,],
+  shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj) |> as.matrix()
 )
+
+mixture_model_fit <- fit_player_weights(
+  pdfs,
+  shooting_skill_data$group_id,
+  alpha = 30,
+  chains = 1,
+  iter = 100,
+  seed = 42
+)
+
+mixture_model_components[selected_components,] |>
+  dplyr::mutate(
+    y = purrr::map_dbl(mean, ~.[[1]]),
+    z = purrr::map_dbl(mean, ~.[[2]]),
+    weight = mixture_model_fit$global_weights,
+    lambda = as.factor(lambda)
+  ) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  ggplot2::geom_point(colour = "blue") +
+  ggplot2::scale_size_manual(values = c(3, 7)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
 ```
 
 ## Interseason stability
 
 ```{r}
+component_values <- mixture_model_components[selected_components,] |>
+  get_component_values() |>
+  dplyr::pull(value)
+metrics <- shooting_skill_data |> 
+  load_rb_post_xg(mixture_model_fit$player_weights, component_values) |>
+  load_gen_post_xg(pdfs, mixture_model_fit$global_weights, component_values)
+    
 season_stats <- metrics |>
   dplyr::group_by(player, Season) |>
   dplyr::summarise(

@@ -26,6 +26,7 @@ stripGlmLR = function(cm) {
 
 data <- statsbomb_shots_processed %>%
   filter_post_xg_shots() %>%
+  flip_left_foot_shot_end_coords() %>%
   dplyr::mutate(Goal = outcome == "Goal",
                 y = y_end_proj,
                 z = z_end_proj)
