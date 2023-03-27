@@ -1,7 +1,8 @@
 devtools::load_all()
 
 shots_data <- statsbomb_shots_processed |>
-  prepare_shooting_skill_data()
+  prepare_shooting_skill_data() |>
+  dplyr::filter(League == "MLS", Season == 2018)
 
 mixture_model_components <- get_mixture_model_components()
 
@@ -12,16 +13,25 @@ pdfs <- get_shot_probability_densities(
     as.matrix()
 )
 
-global_weights <- fit_global_weights(pdfs, chains = 4, iter = 1000, seed = 42)
+# If have multiple chains, need multiple named lists within the big list
+inits <- list(list(global_weights = colMeans(pdfs) / sum(colMeans(pdfs))))
+
+global_weights <- fit_global_weights(
+  pdfs,
+  chains = 1,
+  iter = 1000,
+  seed = 42,
+  init = inits
+)
 
 shooting_skill_data <- get_player_groups(
   shots_data,
-  grouping_cols = c("player_id", "season"),
+  grouping_cols = c("player", "Season"),
   group_size_threshold = 5
 )
 
 selected_components <- which(global_weights > 0.01)
-usethis::use_data(selected_components)
+usethis::use_data(selected_components, overwrite = TRUE)
 
 pdfs <- get_shot_probability_densities(
   mixture_model_components[selected_components,],
@@ -40,10 +50,11 @@ standata <- list(
 out <- rstan::sampling(
   stanmodels$player_mm_weights,
   data = standata,
-  chains = 4,
+  chains = 1,
   iter = 1000,
-  seed = 42
+  seed = 42,
+  init = inits
 )
 
 player_weight_posteriors <- rstan::extract(out)
-usethis::use_data(player_weight_posteriors)
+usethis::use_data(player_weight_posteriors, overwrite = TRUE)
