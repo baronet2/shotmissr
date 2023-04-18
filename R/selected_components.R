@@ -2,6 +2,4 @@
 #'
 #' The indices of the full mixture model components kept after pruning components
 #' based on their mixture weights.
-#'
-#' @export
 "selected_components"

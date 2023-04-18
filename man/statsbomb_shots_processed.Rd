@@ -5,7 +5,7 @@
 \alias{statsbomb_shots_processed}
 \title{Processed StatsBomb shots data}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 60476 rows and 20 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 83331 rows and 19 columns.
 }
 \source{
 Based on \code{statsbomb_shots}
