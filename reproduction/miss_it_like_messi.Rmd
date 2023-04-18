@@ -1,6 +1,10 @@
 ---
 title: "Miss It Like Messi"
 output: github_document
+vignette: >
+  %\VignetteIndexEntry{Miss It Like Messi}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}

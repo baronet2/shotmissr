@@ -10,27 +10,28 @@ devtools::load_all()
 
 ``` r
 statsbomb_shots_processed |>
+  prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
 #> # A tibble: 15 x 3
 #> # Groups:   League, Season [15]
 #>    League Season num_shots
 #>    <fct>   <int>     <int>
-#>  1 ARG      2019      3675
-#>  2 FR2      2018      4405
-#>  3 FR2      2019      3386
-#>  4 FR2      2020      4243
-#>  5 GR2      2018      4065
-#>  6 GR2      2019      4189
-#>  7 GR2      2020      3787
-#>  8 MLS      2018      5383
-#>  9 MLS      2019      5811
-#> 10 MLS      2020      4071
-#> 11 NED      2018      4212
-#> 12 NED      2019      3235
-#> 13 NED      2020      3960
-#> 14 USL      2019      2503
-#> 15 USL      2020      3551
+#>  1 ARG      2019      2366
+#>  2 FR2      2018      2892
+#>  3 FR2      2019      2264
+#>  4 FR2      2020      2824
+#>  5 GR2      2018      2566
+#>  6 GR2      2019      2646
+#>  7 GR2      2020      2443
+#>  8 MLS      2018      3552
+#>  9 MLS      2019      3829
+#> 10 MLS      2020      2620
+#> 11 NED      2018      2774
+#> 12 NED      2019      2136
+#> 13 NED      2020      2603
+#> 14 USL      2019      1701
+#> 15 USL      2020      2332
 ```
 
 ## Figure 1
@@ -220,55 +221,13 @@ Hunter_et_al_2018_shots |>
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
 
-## Pipeline to compute metrics
+## Compute full global weights
 
 ``` r
-# Note: mixture_model_components and global_weights should already be filtered
-pipeline <- function(
-    shots_data,
-    grouping_cols = c("player"),
-    group_size_threshold = 30,
-    mixture_model_components,
-    global_weights,
-    alpha = Inf
-  ) {
-  shooting_skill_data <- shots_data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_cols))) |>
-    dplyr::filter(dplyr::n() >= group_size_threshold) |>
-    dplyr::mutate(group_id = dplyr::cur_group_id()) |>
-    dplyr::ungroup()
-  
-  if (nrow(shooting_skill_data) == 0) {
-    print("Could not run pipeline. No groups meet sample size threshold.")
-  }
-  
-  shots <- as.matrix(shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj))
-  
-  pdfs <- get_shot_probability_densities(
-    mixture_model_components,
-    shots
-  )
-  
-  player_weights <- fit_player_weights(
-    pdfs,
-    shooting_skill_data$group_id,
-    global_weights,
-    alpha = alpha
-  )
-  
-  shooting_skill_data |>
-    load_rb_post_xg(player_weights, mixture_model_components) |>
-    load_gen_post_xg(pdfs, mixture_model_components)
-}
-
 shots_data <- statsbomb_shots_processed |>
-  dplyr::filter(!is.na(z_end_proj)) |>
-  dplyr::group_by(player, Season) |>
-  dplyr::filter(dplyr::n() >= 50) |>
-  dplyr::ungroup()
+  prepare_shooting_skill_data()
 
-mixture_model_components <- get_mixture_model_components() |>
-  get_component_values()
+mixture_model_components <- get_mixture_model_components()
 
 pdfs <- get_shot_probability_densities(
   mixture_model_components,
@@ -276,20 +235,136 @@ pdfs <- get_shot_probability_densities(
     dplyr::select(y_end_proj, z_end_proj) |>
     as.matrix()
 )
-global_weights <- fit_global_weights(pdfs)
+
+global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: EXPERIMENTAL ALGORITHM:
+#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
+#> Chain 1:   or buggy. The interface is subject to change.
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Gradient evaluation took 0.106 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1060 seconds.
+#> Chain 1: Adjust your expectations accordingly!
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Begin eta adaptation.
+#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
+#> Chain 1: 
+#> Chain 1: Begin stochastic gradient ascent.
+#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+#> Chain 1:    100      -253242.244             1.000            1.000
+#> Chain 1:    200      -252968.504             0.501            1.000
+#> Chain 1:    300      -252938.710             0.001            0.001   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+#> Chain 1: 
+#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+#> Chain 1: COMPLETED.
+#> Warning: Pareto k diagnostic value is 2.41. Resampling is disabled. Decreasing
+#> tol_rel_obj may help if variational algorithm has terminated prematurely.
+#> Otherwise consider using sampling instead.
+
+mixture_model_components |>
+  dplyr::mutate(
+    y = purrr::map_dbl(mean, ~.[[1]]),
+    z = purrr::map_dbl(mean, ~.[[2]]),
+    weight = global_weights,
+    lambda = as.factor(lambda)
+  ) |>
+  dplyr::filter(weight > 0.012) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  ggplot2::geom_point(colour = "blue") +
+  ggplot2::scale_size_manual(values = c(3, 7)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+## Compute pruned global and player weights
+
+``` r
+shooting_skill_data <- get_player_groups(shots_data, group_size_threshold = 10)
+
 selected_components <- which(global_weights > 0.012)
 
-metrics <- pipeline(
-  shots_data = shots_data,
-  group_size_threshold = 10,
-  mixture_model_components = mixture_model_components[selected_components,],
-  global_weights = global_weights[selected_components]
+pdfs <- get_shot_probability_densities(
+  mixture_model_components[selected_components,],
+  shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj) |> as.matrix()
 )
+
+mixture_model_fit <- fit_player_weights(
+  pdfs,
+  shooting_skill_data$group_id,
+  alpha = 30,
+  iter = 500,
+  seed = 42
+)
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: EXPERIMENTAL ALGORITHM:
+#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
+#> Chain 1:   or buggy. The interface is subject to change.
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Gradient evaluation took 0.061 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 610 seconds.
+#> Chain 1: Adjust your expectations accordingly!
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Begin eta adaptation.
+#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
+#> Chain 1: 
+#> Chain 1: Begin stochastic gradient ascent.
+#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+#> Chain 1:    100      -188508.965             1.000            1.000
+#> Chain 1:    200      -188279.812             0.501            1.000
+#> Chain 1:    300      -188183.273             0.001            0.001   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+#> Chain 1: 
+#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+#> Chain 1: COMPLETED.
+#> Warning: Pareto k diagnostic value is 10.17. Resampling is disabled. Decreasing
+#> tol_rel_obj may help if variational algorithm has terminated prematurely.
+#> Otherwise consider using sampling instead.
+
+mixture_model_components[selected_components,] |>
+  dplyr::mutate(
+    y = purrr::map_dbl(mean, ~.[[1]]),
+    z = purrr::map_dbl(mean, ~.[[2]]),
+    weight = mixture_model_fit$global_weights,
+    lambda = as.factor(lambda)
+  ) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  ggplot2::geom_point(colour = "blue") +
+  ggplot2::scale_size_manual(values = c(3, 7)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
 ```
+
+![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ## Interseason stability
 
 ``` r
+component_values <- mixture_model_components[selected_components,] |>
+  get_component_values() |>
+  dplyr::pull(value)
+metrics <- shooting_skill_data |> 
+  load_rb_post_xg(mixture_model_fit$player_weights, component_values) |>
+  load_gen_post_xg(pdfs, mixture_model_fit$global_weights, component_values)
+    
 season_stats <- metrics |>
   dplyr::group_by(player, Season) |>
   dplyr::summarise(
@@ -312,9 +387,9 @@ season_stats |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix()
-#>               SBPreXg_b SBPostXg_b rb_post_xg_b gen_post_xg_b
-#> SBPreXg_a            NA         NA           NA            NA
-#> SBPostXg_a           NA         NA           NA            NA
-#> rb_post_xg_a         NA         NA           NA            NA
-#> gen_post_xg_a        NA         NA           NA            NA
+#>                SBPreXg_b SBPostXg_b rb_post_xg_b gen_post_xg_b
+#> SBPreXg_a     0.25689143         NA    0.1055796   0.054926685
+#> SBPostXg_a            NA         NA           NA            NA
+#> rb_post_xg_a  0.07998755         NA    1.0000000   0.433992811
+#> gen_post_xg_a 0.03708035         NA    0.4468246   0.002646415
 ```
