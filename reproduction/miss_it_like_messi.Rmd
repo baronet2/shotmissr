@@ -1,10 +1,6 @@
 ---
 title: "Miss It Like Messi"
 output: github_document
-vignette: >
-  %\VignetteIndexEntry{Miss It Like Messi}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
@@ -197,11 +193,10 @@ pdfs <- get_shot_probability_densities(
   mixture_model_components,
   shots = shots_data |>
     dplyr::select(y_end_proj, z_end_proj) |>
-    head(1000) |> # TODO Use full data
     as.matrix()
 )
 
-global_weights <- fit_global_weights(pdfs, chains = 1, iter = 100, seed = 42)
+global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 
 mixture_model_components |>
   dplyr::mutate(
@@ -221,7 +216,7 @@ mixture_model_components |>
 ## Compute pruned global and player weights
 
 ```{r}
-shooting_skill_data <- get_player_groups(shots_data, group_size_threshold = 50)
+shooting_skill_data <- get_player_groups(shots_data, group_size_threshold = 10)
 
 selected_components <- which(global_weights > 0.012)
 
@@ -234,8 +229,7 @@ mixture_model_fit <- fit_player_weights(
   pdfs,
   shooting_skill_data$group_id,
   alpha = 30,
-  chains = 1,
-  iter = 100,
+  iter = 500,
   seed = 42
 )
 

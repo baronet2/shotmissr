@@ -118,7 +118,7 @@ fit_global_weights <- function(pdfs, ...) {
     num_components = ncol(pdfs),
     trunc_pdfs = pdfs
   )
-  out <- rstan::sampling(stanmodels$global_mm_weights, data = standata, ...)
+  out <- rstan::vb(stanmodels$global_mm_weights, data = standata, ...)
 
   out |>
     rstan::get_posterior_mean(pars = "global_weights") |>
@@ -184,7 +184,7 @@ fit_player_weights <- function(pdfs, player_labels, alpha = 30, global_weights =
       trunc_pdfs = pdfs,
       alpha = alpha
     )
-    out <- rstan::sampling(stanmodels$player_mm_weights, data = standata, ...)
+    out <- rstan::vb(stanmodels$player_mm_weights, data = standata, ...)
 
     global_weights <- out |>
       rstan::get_posterior_mean(pars = "global_weights") |>
