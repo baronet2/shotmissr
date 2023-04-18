@@ -13,15 +13,10 @@ pdfs <- get_shot_probability_densities(
     as.matrix()
 )
 
-# If have multiple chains, need multiple named lists within the big list
-inits <- list(list(global_weights = colMeans(pdfs) / sum(colMeans(pdfs))))
-
 global_weights <- fit_global_weights(
   pdfs,
-  chains = 1,
-  iter = 1000,
-  seed = 42,
-  init = inits
+  iter = 500,
+  seed = 42
 )
 
 shooting_skill_data <- get_player_groups(
@@ -47,13 +42,11 @@ standata <- list(
   alpha = 30
 )
 
-out <- rstan::sampling(
+out <- rstan::vb(
   stanmodels$player_mm_weights,
   data = standata,
-  chains = 1,
-  iter = 1000,
-  seed = 42,
-  init = inits
+  iter = 500,
+  seed = 42
 )
 
 player_weight_posteriors <- rstan::extract(out)
