@@ -187,7 +187,7 @@ Hunter_et_al_2018_shots |>
 
 ## Compute full global weights
 
-```{r}
+```{r cache = TRUE}
 shots_data <- statsbomb_shots_processed |>
   prepare_shooting_skill_data()
 
@@ -201,7 +201,9 @@ pdfs <- get_shot_probability_densities(
 )
 
 global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
+```
 
+```{r}
 mixture_model_components |>
   dplyr::mutate(
     y = purrr::map_dbl(mean, ~.[[1]]),
@@ -217,10 +219,19 @@ mixture_model_components |>
   ggplot2::theme_bw()
 ```
 
-## Compute pruned global and player weights
+## Intraseason Stability
+```{r cache = TRUE}
+half_season_shots_data <- statsbomb_shots_processed |>
+  dplyr::filter(!is.na(z_end_proj)) |>
+  dplyr::group_by(player, Season, League) |>
+  dplyr::mutate(first_half_season = dplyr::row_number() < dplyr::n() / 2) |>
+  dplyr::ungroup()
 
-```{r}
-shooting_skill_data <- get_player_groups(shots_data, group_size_threshold = 10)
+shooting_skill_data <- get_player_groups(
+  half_season_shots_data,
+  grouping_cols = c("player", "League", "Season", "first_half_season"),
+  group_size_threshold = 10
+)
 
 selected_components <- which(global_weights > 0.012)
 
@@ -237,40 +248,29 @@ mixture_model_fit <- fit_player_weights(
   seed = 42
 )
 
-mixture_model_components[selected_components,] |>
-  dplyr::mutate(
-    y = purrr::map_dbl(mean, ~.[[1]]),
-    z = purrr::map_dbl(mean, ~.[[2]]),
-    weight = mixture_model_fit$global_weights,
-    lambda = as.factor(lambda)
-  ) |>
-  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
-  ggplot2::geom_point(colour = "blue") +
-  ggplot2::scale_size_manual(values = c(3, 7)) +
-  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
-```
+player_weights <- mixture_model_fit[["player_weights"]]
 
-## Interseason stability
-
-```{r}
 component_values <- mixture_model_components[selected_components,] |>
   get_component_values() |>
   dplyr::pull(value)
-metrics <- shooting_skill_data |> 
-  load_rb_post_xg(mixture_model_fit$player_weights, component_values) |>
-  load_gen_post_xg(pdfs, mixture_model_fit$global_weights, component_values)
-    
-season_stats <- metrics |>
-  dplyr::group_by(player, Season) |>
+
+half_season_metrics <- shooting_skill_data |>
+  load_rb_post_xg(player_weights, component_values) |>
+  load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
+
+half_season_stats <- half_season_metrics |>
+  dplyr::group_by(player, Season, League, first_half_season) |>
   dplyr::summarise(
     dplyr::across(dplyr::matches("xg|xG"), mean, na.rm = TRUE),
+    n = dplyr::n(),
     .groups = "keep"
   )
+```
 
-season_stats |>
-  dplyr::inner_join(season_stats, by = c("player"), suffix = c("_a", "_b")) |>
-  dplyr::filter(Season_a + 1 == Season_b) |>
+```{r}
+half_season_stats |>
+  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
+  dplyr::filter(first_half_season_a, !first_half_season_b) |>
   dplyr::ungroup() |>
   # Get metrics only
   dplyr::select(dplyr::matches("xg|Xg")) |>
@@ -282,6 +282,34 @@ season_stats |>
   t() |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
-  as.matrix()
+  as.matrix() |>
+  knitr::kable()
 ```
+
+
+```{r}
+stability_data <- half_season_stats |>
+  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
+  dplyr::filter(first_half_season_a, !first_half_season_b) |>
+  dplyr::ungroup()
+
+get_stability_above_threshold <- function(metric, n) {
+  filtered_data <- stability_data |>
+    dplyr::filter(n_a + n_b >= n)
+  
+  # TODO bootstrap rows here to get estimate of lower and upper bound
+  
+  cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
+}
+
+expand.grid(threshold = 20:60, metric = c("SBPreXg", "SBPostXg")) |>
+  dplyr::mutate(
+    stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
+  ) |>
+  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
+  ggplot2::geom_line()
+# TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
+
+```
+
 
