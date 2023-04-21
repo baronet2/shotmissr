@@ -12,27 +12,27 @@ devtools::load_all()
 statsbomb_shots_processed |>
   prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
-  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
-#> # A tibble: 15 x 3
-#> # Groups:   League, Season [15]
-#>    League Season num_shots
-#>    <fct>   <int>     <int>
-#>  1 ARG      2019      2366
-#>  2 FR2      2018      2892
-#>  3 FR2      2019      2264
-#>  4 FR2      2020      2824
-#>  5 GR2      2018      2566
-#>  6 GR2      2019      2646
-#>  7 GR2      2020      2443
-#>  8 MLS      2018      3552
-#>  9 MLS      2019      3829
-#> 10 MLS      2020      2620
-#> 11 NED      2018      2774
-#> 12 NED      2019      2136
-#> 13 NED      2020      2603
-#> 14 USL      2019      1701
-#> 15 USL      2020      2332
+  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
+  knitr::kable()
 ```
+
+| League | Season | num_shots |
+|:-------|-------:|----------:|
+| ARG    |   2019 |      2366 |
+| FR2    |   2018 |      2892 |
+| FR2    |   2019 |      2264 |
+| FR2    |   2020 |      2824 |
+| GR2    |   2018 |      2566 |
+| GR2    |   2019 |      2646 |
+| GR2    |   2020 |      2443 |
+| MLS    |   2018 |      3552 |
+| MLS    |   2019 |      3829 |
+| MLS    |   2020 |      2620 |
+| NED    |   2018 |      2774 |
+| NED    |   2019 |      2136 |
+| NED    |   2020 |      2603 |
+| USL    |   2019 |      1701 |
+| USL    |   2020 |      2332 |
 
 ## Figure 1
 
@@ -221,7 +221,7 @@ Hunter_et_al_2018_shots |>
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
 
-## Compute full global weights
+## Estimate global weights
 
 ``` r
 shots_data <- statsbomb_shots_processed |>
@@ -271,6 +271,8 @@ global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 #> Otherwise consider using sampling instead.
 ```
 
+## Figure 3
+
 ``` r
 mixture_model_components |>
   dplyr::mutate(
@@ -289,7 +291,7 @@ mixture_model_components |>
 
 ![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-## Intraseason Stability
+## Estimate player weights
 
 ``` r
 half_season_shots_data <- statsbomb_shots_processed |>
@@ -301,7 +303,7 @@ half_season_shots_data <- statsbomb_shots_processed |>
 shooting_skill_data <- get_player_groups(
   half_season_shots_data,
   grouping_cols = c("player", "League", "Season", "first_half_season"),
-  group_size_threshold = 10
+  group_size_threshold = 3
 )
 
 selected_components <- which(global_weights > 0.012)
@@ -326,8 +328,8 @@ mixture_model_fit <- fit_player_weights(
 #> Chain 1: 
 #> Chain 1: 
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.049 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 490 seconds.
+#> Chain 1: Gradient evaluation took 0.167 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1670 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -341,13 +343,13 @@ mixture_model_fit <- fit_player_weights(
 #> Chain 1: 
 #> Chain 1: Begin stochastic gradient ascent.
 #> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-#> Chain 1:    100      -270013.881             1.000            1.000
-#> Chain 1:    200      -269521.754             0.501            1.000
-#> Chain 1:    300      -269392.478             0.001            0.002   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+#> Chain 1:    100      -470012.006             1.000            1.000
+#> Chain 1:    200      -467988.558             0.502            1.000
+#> Chain 1:    300      -467288.598             0.003            0.004   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
 #> Chain 1: 
 #> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
 #> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 13.44. Resampling is disabled. Decreasing
+#> Warning: Pareto k diagnostic value is 23.29. Resampling is disabled. Decreasing
 #> tol_rel_obj may help if variational algorithm has terminated prematurely.
 #> Otherwise consider using sampling instead.
 
@@ -370,6 +372,8 @@ half_season_stats <- half_season_metrics |>
   )
 ```
 
+## Table 3
+
 ``` r
 half_season_stats |>
   dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
@@ -391,10 +395,40 @@ half_season_stats |>
 
 |               | SBPreXg_b | SBPostXg_b | rb_post_xg_b | gen_post_xg_b |
 |:--------------|----------:|-----------:|-------------:|--------------:|
-| SBPreXg_a     | 0.5748403 |  0.4269781 |    0.2012152 |     0.2301780 |
-| SBPostXg_a    | 0.4152109 |  0.3397086 |    0.1075117 |     0.1098083 |
-| rb_post_xg_a  | 0.2038604 |  0.1234555 |    0.1872384 |     0.1949796 |
-| gen_post_xg_a | 0.2302747 |  0.1553330 |    0.1949500 |     0.2140955 |
+| SBPreXg_a     | 0.4222945 |         NA |    0.1505833 |     0.1724573 |
+| SBPostXg_a    |        NA |         NA |           NA |            NA |
+| rb_post_xg_a  | 0.1569068 |         NA |    0.1495119 |     0.1181859 |
+| gen_post_xg_a | 0.1454157 |         NA |    0.1210145 |     0.1295839 |
+
+## Table 4
+
+``` r
+half_season_stats |>
+  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
+  dplyr::filter(first_half_season_a, !first_half_season_b, n_a + n_b >= 30) |>
+  dplyr::ungroup() |>
+  # Get metrics only
+  dplyr::select(dplyr::matches("xg|Xg")) |>
+  # Get correlation matrix
+  cor() |>
+  # Subset correlation matrix so season A is rows and season B is columns
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_a")) |>
+  t() |>
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_b")) |>
+  as.matrix() |>
+  knitr::kable()
+```
+
+|               | SBPreXg_b | SBPostXg_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|----------:|-----------:|-------------:|--------------:|
+| SBPreXg_a     | 0.6262900 |  0.4748393 |    0.1546964 |     0.1635986 |
+| SBPostXg_a    | 0.4937503 |  0.4106072 |    0.0827955 |     0.0835833 |
+| rb_post_xg_a  | 0.2246355 |  0.1377618 |    0.2226103 |     0.1957779 |
+| gen_post_xg_a | 0.2306573 |  0.1431032 |    0.2136906 |     0.2012311 |
+
+## Figure 6
 
 ``` r
 stability_data <- half_season_stats |>
@@ -411,15 +445,16 @@ get_stability_above_threshold <- function(metric, n) {
   cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
 }
 
-expand.grid(threshold = 20:60, metric = c("SBPreXg", "SBPostXg")) |>
+expand.grid(threshold = 6:60, metric = c("SBPreXg", "SBPostXg")) |>
   dplyr::mutate(
     stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
   ) |>
   ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
   ggplot2::geom_line()
+#> Warning: Removed 15 row(s) containing missing values (geom_path).
 ```
 
-![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
 # TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold

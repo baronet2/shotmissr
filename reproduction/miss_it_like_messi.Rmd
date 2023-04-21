@@ -10,7 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  cache = TRUE
 )
 ```
 
@@ -23,7 +24,8 @@ devtools::load_all()
 statsbomb_shots_processed |>
   prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
-  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
+  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
+  knitr::kable()
 ```
 
 ## Figure 1
@@ -185,9 +187,9 @@ Hunter_et_al_2018_shots |>
 
 ```
 
-## Compute full global weights
+## Estimate global weights
 
-```{r cache = TRUE}
+```{r}
 shots_data <- statsbomb_shots_processed |>
   prepare_shooting_skill_data()
 
@@ -202,6 +204,8 @@ pdfs <- get_shot_probability_densities(
 
 global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 ```
+
+## Figure 3
 
 ```{r}
 mixture_model_components |>
@@ -219,8 +223,9 @@ mixture_model_components |>
   ggplot2::theme_bw()
 ```
 
-## Intraseason Stability
-```{r cache = TRUE}
+## Estimate player weights
+
+```{r}
 half_season_shots_data <- statsbomb_shots_processed |>
   dplyr::filter(!is.na(z_end_proj)) |>
   dplyr::group_by(player, Season, League) |>
@@ -230,7 +235,7 @@ half_season_shots_data <- statsbomb_shots_processed |>
 shooting_skill_data <- get_player_groups(
   half_season_shots_data,
   grouping_cols = c("player", "League", "Season", "first_half_season"),
-  group_size_threshold = 10
+  group_size_threshold = 3
 )
 
 selected_components <- which(global_weights > 0.012)
@@ -267,6 +272,8 @@ half_season_stats <- half_season_metrics |>
   )
 ```
 
+## Table 3
+
 ```{r}
 half_season_stats |>
   dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
@@ -286,6 +293,28 @@ half_season_stats |>
   knitr::kable()
 ```
 
+## Table 4
+
+```{r}
+half_season_stats |>
+  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
+  dplyr::filter(first_half_season_a, !first_half_season_b, n_a + n_b >= 30) |>
+  dplyr::ungroup() |>
+  # Get metrics only
+  dplyr::select(dplyr::matches("xg|Xg")) |>
+  # Get correlation matrix
+  cor() |>
+  # Subset correlation matrix so season A is rows and season B is columns
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_a")) |>
+  t() |>
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_b")) |>
+  as.matrix() |>
+  knitr::kable()
+```
+
+## Figure 6
 
 ```{r}
 stability_data <- half_season_stats |>
@@ -302,7 +331,7 @@ get_stability_above_threshold <- function(metric, n) {
   cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
 }
 
-expand.grid(threshold = 20:60, metric = c("SBPreXg", "SBPostXg")) |>
+expand.grid(threshold = 6:60, metric = c("SBPreXg", "SBPostXg")) |>
   dplyr::mutate(
     stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
   ) |>
@@ -311,5 +340,4 @@ expand.grid(threshold = 20:60, metric = c("SBPreXg", "SBPostXg")) |>
 # TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
 
 ```
-
 
