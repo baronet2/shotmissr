@@ -245,8 +245,8 @@ global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 #> Chain 1: 
 #> Chain 1: 
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.485 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 4850 seconds.
+#> Chain 1: Gradient evaluation took 0.234 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2340 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -289,7 +289,7 @@ mixture_model_components |>
   ggplot2::theme_bw()
 ```
 
-![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
 
 ## Estimate player weights
 
@@ -328,8 +328,8 @@ mixture_model_fit <- fit_player_weights(
 #> Chain 1: 
 #> Chain 1: 
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.167 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1670 seconds.
+#> Chain 1: Gradient evaluation took 0.126 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1260 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -354,7 +354,9 @@ mixture_model_fit <- fit_player_weights(
 #> Otherwise consider using sampling instead.
 
 player_weights <- mixture_model_fit[["player_weights"]]
+```
 
+``` r
 component_values <- mixture_model_components[selected_components,] |>
   get_component_values() |>
   dplyr::pull(value)
@@ -364,9 +366,15 @@ half_season_metrics <- shooting_skill_data |>
   load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
 
 half_season_stats <- half_season_metrics |>
+  dplyr::mutate(SBPostXg = ifelse(is.na(SBPostXg), 0, SBPostXg)) |>
+  dplyr::mutate(goal_pct = (outcome == "Goal")) |>
+  dplyr::mutate(
+    gax = goal_pct - SBPreXg,
+    ega = SBPostXg - SBPreXg
+  ) |>
   dplyr::group_by(player, Season, League, first_half_season) |>
   dplyr::summarise(
-    dplyr::across(dplyr::matches("xg|xG"), mean, na.rm = TRUE),
+    dplyr::across(dplyr::matches("goal_pct|gax|ega|_xg"), mean, na.rm = TRUE),
     n = dplyr::n(),
     .groups = "keep"
   )
@@ -375,67 +383,73 @@ half_season_stats <- half_season_metrics |>
 ## Table 3
 
 ``` r
-half_season_stats |>
-  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
-  dplyr::filter(first_half_season_a, !first_half_season_b) |>
-  dplyr::ungroup() |>
-  # Get metrics only
-  dplyr::select(dplyr::matches("xg|Xg")) |>
-  # Get correlation matrix
-  cor() |>
-  # Subset correlation matrix so season A is rows and season B is columns
-  data.frame() |>
-  dplyr::select(dplyr::ends_with("_a")) |>
-  t() |>
-  data.frame() |>
-  dplyr::select(dplyr::ends_with("_b")) |>
-  as.matrix() |>
-  knitr::kable()
-```
-
-|               | SBPreXg_b | SBPostXg_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|----------:|-----------:|-------------:|--------------:|
-| SBPreXg_a     | 0.4222945 |         NA |    0.1505833 |     0.1724573 |
-| SBPostXg_a    |        NA |         NA |           NA |            NA |
-| rb_post_xg_a  | 0.1569068 |         NA |    0.1495119 |     0.1181859 |
-| gen_post_xg_a | 0.1454157 |         NA |    0.1210145 |     0.1295839 |
-
-## Table 4
-
-``` r
-half_season_stats |>
-  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
-  dplyr::filter(first_half_season_a, !first_half_season_b, n_a + n_b >= 30) |>
-  dplyr::ungroup() |>
-  # Get metrics only
-  dplyr::select(dplyr::matches("xg|Xg")) |>
-  # Get correlation matrix
-  cor() |>
-  # Subset correlation matrix so season A is rows and season B is columns
-  data.frame() |>
-  dplyr::select(dplyr::ends_with("_a")) |>
-  t() |>
-  data.frame() |>
-  dplyr::select(dplyr::ends_with("_b")) |>
-  as.matrix() |>
-  knitr::kable()
-```
-
-|               | SBPreXg_b | SBPostXg_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|----------:|-----------:|-------------:|--------------:|
-| SBPreXg_a     | 0.6262900 |  0.4748393 |    0.1546964 |     0.1635986 |
-| SBPostXg_a    | 0.4937503 |  0.4106072 |    0.0827955 |     0.0835833 |
-| rb_post_xg_a  | 0.2246355 |  0.1377618 |    0.2226103 |     0.1957779 |
-| gen_post_xg_a | 0.2306573 |  0.1431032 |    0.2136906 |     0.2012311 |
-
-## Figure 6
-
-``` r
 stability_data <- half_season_stats |>
   dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
   dplyr::filter(first_half_season_a, !first_half_season_b) |>
   dplyr::ungroup()
 
+stability_data |>
+  # Get metrics only
+  dplyr::select(
+    dplyr::starts_with("goal_pct"),
+    dplyr::starts_with("gax"),
+    dplyr::starts_with("ega"),
+    dplyr::matches("_xg")
+  ) |>
+  # Get correlation matrix
+  cor() |>
+  # Subset correlation matrix so season A is rows and season B is columns
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_a")) |>
+  t() |>
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_b")) |>
+  as.matrix() |>
+  knitr::kable()
+```
+
+|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.1756582 | 0.0391476 | 0.0848959 |    0.1017865 |     0.1256231 |
+| gax_a         |  0.0635668 | 0.0371019 | 0.0775587 |    0.0333811 |     0.0451932 |
+| ega_a         |  0.0359854 | 0.0080632 | 0.0570395 |    0.0273394 |     0.0287748 |
+| rb_post_xg_a  |  0.0896275 | 0.0102973 | 0.0357115 |    0.1368973 |     0.1096092 |
+| gen_post_xg_a |  0.0818377 | 0.0048793 | 0.0304767 |    0.1188096 |     0.1328985 |
+
+## Table 4
+
+``` r
+stability_data |>
+  # Get metrics only
+  dplyr::select(
+    dplyr::starts_with("goal_pct"),
+    dplyr::starts_with("gax"),
+    dplyr::starts_with("ega"),
+    dplyr::matches("_xg")
+  ) |>
+  # Get correlation matrix
+  cor() |>
+  # Subset correlation matrix so season A is rows and season B is columns
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_a")) |>
+  t() |>
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_b")) |>
+  as.matrix() |>
+  knitr::kable()
+```
+
+|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.1756582 | 0.0391476 | 0.0848959 |    0.1017865 |     0.1256231 |
+| gax_a         |  0.0635668 | 0.0371019 | 0.0775587 |    0.0333811 |     0.0451932 |
+| ega_a         |  0.0359854 | 0.0080632 | 0.0570395 |    0.0273394 |     0.0287748 |
+| rb_post_xg_a  |  0.0896275 | 0.0102973 | 0.0357115 |    0.1368973 |     0.1096092 |
+| gen_post_xg_a |  0.0818377 | 0.0048793 | 0.0304767 |    0.1188096 |     0.1328985 |
+
+## Figure 6
+
+``` r
 get_stability_above_threshold <- function(metric, n) {
   filtered_data <- stability_data |>
     dplyr::filter(n_a + n_b >= n)
@@ -445,16 +459,16 @@ get_stability_above_threshold <- function(metric, n) {
   cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
 }
 
-expand.grid(threshold = 6:60, metric = c("SBPreXg", "SBPostXg")) |>
+expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_xg")) |>
   dplyr::mutate(
     stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
   ) |>
   ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
-  ggplot2::geom_line()
-#> Warning: Removed 15 row(s) containing missing values (geom_path).
+  ggplot2::geom_line() +
+  ggplot2::theme_bw()
 ```
 
-![](miss_it_like_messi_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](miss_it_like_messi_files/figure-gfm/figure_6-1.png)<!-- -->
 
 ``` r
 # TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold

@@ -11,7 +11,9 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  cache = TRUE
+  cache = TRUE,
+  fig.width = 8,
+  fig.height = 6
 )
 ```
 
@@ -20,7 +22,7 @@ devtools::load_all()
 ```
 
 ## Table 1
-```{r}
+```{r table_1}
 statsbomb_shots_processed |>
   prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
@@ -29,7 +31,7 @@ statsbomb_shots_processed |>
 ```
 
 ## Figure 1
-```{r figure_1, fig.width=8, fig.height = 6}
+```{r figure_1}
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -44,7 +46,7 @@ statsbomb_shots_processed |>
 
 ## Figure 2
 
-```{r figure_2, fig.width=8, fig.height = 6}
+```{r figure_2}
 statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -71,7 +73,7 @@ statsbomb_shots_processed |>
 ```
 
 ## Figure 5 
-```{r figure_5, fig.width=8, fig.height = 6}
+```{r figure_5}
 yy <- seq(y_left_post(), y_right_post(), by = 0.1)
 zz <- seq(0, z_crossbar(), by = 0.03)
 shots <- expand.grid(y = yy, z = zz)
@@ -88,7 +90,7 @@ shots |>
 
 ## Figure 7
 
-```{r figure_7, fig.width=8, fig.height = 6}
+```{r figure_7}
 statsbomb_shots |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
@@ -103,7 +105,7 @@ statsbomb_shots |>
 
 ## Figure 8
 
-```{r figure_8, fig.width=8, fig.height = 6}
+```{r figure_8}
 z_target <- sort(unique(Hunter_et_al_2018_shots$target_height_yards))
 cat("Execution error covariance matrices:")
 get_execution_error_covariance(z_target[1])
@@ -189,7 +191,7 @@ Hunter_et_al_2018_shots |>
 
 ## Estimate global weights
 
-```{r}
+```{r global_weights}
 shots_data <- statsbomb_shots_processed |>
   prepare_shooting_skill_data()
 
@@ -207,7 +209,7 @@ global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 
 ## Figure 3
 
-```{r}
+```{r figure_3}
 mixture_model_components |>
   dplyr::mutate(
     y = purrr::map_dbl(mean, ~.[[1]]),
@@ -225,7 +227,7 @@ mixture_model_components |>
 
 ## Estimate player weights
 
-```{r}
+```{r player_weights}
 half_season_shots_data <- statsbomb_shots_processed |>
   dplyr::filter(!is.na(z_end_proj)) |>
   dplyr::group_by(player, Season, League) |>
@@ -254,7 +256,9 @@ mixture_model_fit <- fit_player_weights(
 )
 
 player_weights <- mixture_model_fit[["player_weights"]]
+```
 
+```{r metrics}
 component_values <- mixture_model_components[selected_components,] |>
   get_component_values() |>
   dplyr::pull(value)
@@ -264,9 +268,15 @@ half_season_metrics <- shooting_skill_data |>
   load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
 
 half_season_stats <- half_season_metrics |>
+  dplyr::mutate(SBPostXg = ifelse(is.na(SBPostXg), 0, SBPostXg)) |>
+  dplyr::mutate(goal_pct = (outcome == "Goal")) |>
+  dplyr::mutate(
+    gax = goal_pct - SBPreXg,
+    ega = SBPostXg - SBPreXg
+  ) |>
   dplyr::group_by(player, Season, League, first_half_season) |>
   dplyr::summarise(
-    dplyr::across(dplyr::matches("xg|xG"), mean, na.rm = TRUE),
+    dplyr::across(dplyr::matches("goal_pct|gax|ega|_xg"), mean, na.rm = TRUE),
     n = dplyr::n(),
     .groups = "keep"
   )
@@ -274,13 +284,20 @@ half_season_stats <- half_season_metrics |>
 
 ## Table 3
 
-```{r}
-half_season_stats |>
+```{r table_3}
+stability_data <- half_season_stats |>
   dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
   dplyr::filter(first_half_season_a, !first_half_season_b) |>
-  dplyr::ungroup() |>
+  dplyr::ungroup()
+
+stability_data |>
   # Get metrics only
-  dplyr::select(dplyr::matches("xg|Xg")) |>
+  dplyr::select(
+    dplyr::starts_with("goal_pct"),
+    dplyr::starts_with("gax"),
+    dplyr::starts_with("ega"),
+    dplyr::matches("_xg")
+  ) |>
   # Get correlation matrix
   cor() |>
   # Subset correlation matrix so season A is rows and season B is columns
@@ -295,13 +312,15 @@ half_season_stats |>
 
 ## Table 4
 
-```{r}
-half_season_stats |>
-  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
-  dplyr::filter(first_half_season_a, !first_half_season_b, n_a + n_b >= 30) |>
-  dplyr::ungroup() |>
+```{r table_4}
+stability_data |>
   # Get metrics only
-  dplyr::select(dplyr::matches("xg|Xg")) |>
+  dplyr::select(
+    dplyr::starts_with("goal_pct"),
+    dplyr::starts_with("gax"),
+    dplyr::starts_with("ega"),
+    dplyr::matches("_xg")
+  ) |>
   # Get correlation matrix
   cor() |>
   # Subset correlation matrix so season A is rows and season B is columns
@@ -316,12 +335,7 @@ half_season_stats |>
 
 ## Figure 6
 
-```{r}
-stability_data <- half_season_stats |>
-  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
-  dplyr::filter(first_half_season_a, !first_half_season_b) |>
-  dplyr::ungroup()
-
+```{r figure_6}
 get_stability_above_threshold <- function(metric, n) {
   filtered_data <- stability_data |>
     dplyr::filter(n_a + n_b >= n)
@@ -331,12 +345,13 @@ get_stability_above_threshold <- function(metric, n) {
   cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
 }
 
-expand.grid(threshold = 6:60, metric = c("SBPreXg", "SBPostXg")) |>
+expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_xg")) |>
   dplyr::mutate(
     stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
   ) |>
   ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
-  ggplot2::geom_line()
+  ggplot2::geom_line() +
+  ggplot2::theme_bw()
 # TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
 
 ```
