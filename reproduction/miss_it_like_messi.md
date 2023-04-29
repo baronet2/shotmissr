@@ -245,8 +245,8 @@ global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 #> Chain 1: 
 #> Chain 1: 
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.234 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2340 seconds.
+#> Chain 1: Gradient evaluation took 0.084 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 840 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -296,13 +296,13 @@ mixture_model_components |>
 ``` r
 half_season_shots_data <- statsbomb_shots_processed |>
   dplyr::filter(!is.na(z_end_proj)) |>
-  dplyr::group_by(player, Season, League) |>
+  dplyr::group_by(player, Season) |>
   dplyr::mutate(first_half_season = dplyr::row_number() < dplyr::n() / 2) |>
   dplyr::ungroup()
 
 shooting_skill_data <- get_player_groups(
   half_season_shots_data,
-  grouping_cols = c("player", "League", "Season", "first_half_season"),
+  grouping_cols = c("player", "Season", "first_half_season"),
   group_size_threshold = 3
 )
 
@@ -328,8 +328,8 @@ mixture_model_fit <- fit_player_weights(
 #> Chain 1: 
 #> Chain 1: 
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.126 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1260 seconds.
+#> Chain 1: Gradient evaluation took 0.161 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1610 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -343,13 +343,13 @@ mixture_model_fit <- fit_player_weights(
 #> Chain 1: 
 #> Chain 1: Begin stochastic gradient ascent.
 #> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-#> Chain 1:    100      -470012.006             1.000            1.000
-#> Chain 1:    200      -467988.558             0.502            1.000
-#> Chain 1:    300      -467288.598             0.003            0.004   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+#> Chain 1:    100      -471292.882             1.000            1.000
+#> Chain 1:    200      -469268.411             0.502            1.000
+#> Chain 1:    300      -468540.833             0.003            0.004   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
 #> Chain 1: 
 #> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
 #> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 23.29. Resampling is disabled. Decreasing
+#> Warning: Pareto k diagnostic value is 19.8. Resampling is disabled. Decreasing
 #> tol_rel_obj may help if variational algorithm has terminated prematurely.
 #> Otherwise consider using sampling instead.
 
@@ -372,7 +372,7 @@ half_season_stats <- half_season_metrics |>
     gax = goal_pct - SBPreXg,
     ega = SBPostXg - SBPreXg
   ) |>
-  dplyr::group_by(player, Season, League, first_half_season) |>
+  dplyr::group_by(player, Season, first_half_season) |>
   dplyr::summarise(
     dplyr::across(dplyr::matches("goal_pct|gax|ega|_xg"), mean, na.rm = TRUE),
     n = dplyr::n(),
@@ -384,7 +384,7 @@ half_season_stats <- half_season_metrics |>
 
 ``` r
 stability_data <- half_season_stats |>
-  dplyr::inner_join(half_season_stats, by = c("player", "Season", "League"), suffix = c("_a", "_b")) |>
+  dplyr::inner_join(half_season_stats, by = c("player", "Season"), suffix = c("_a", "_b")) |>
   dplyr::filter(first_half_season_a, !first_half_season_b) |>
   dplyr::ungroup()
 
@@ -410,16 +410,17 @@ stability_data |>
 
 |               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
 |:--------------|-----------:|----------:|----------:|-------------:|--------------:|
-| goal_pct_a    |  0.1756582 | 0.0391476 | 0.0848959 |    0.1017865 |     0.1256231 |
-| gax_a         |  0.0635668 | 0.0371019 | 0.0775587 |    0.0333811 |     0.0451932 |
-| ega_a         |  0.0359854 | 0.0080632 | 0.0570395 |    0.0273394 |     0.0287748 |
-| rb_post_xg_a  |  0.0896275 | 0.0102973 | 0.0357115 |    0.1368973 |     0.1096092 |
-| gen_post_xg_a |  0.0818377 | 0.0048793 | 0.0304767 |    0.1188096 |     0.1328985 |
+| goal_pct_a    |  0.1753718 | 0.0408746 | 0.0858735 |    0.0958211 |     0.1397574 |
+| gax_a         |  0.0642856 | 0.0384039 | 0.0785441 |    0.0276487 |     0.0659014 |
+| ega_a         |  0.0387612 | 0.0092856 | 0.0544922 |   -0.0058102 |     0.0292018 |
+| rb_post_xg_a  |  0.0732375 | 0.0032928 | 0.0168249 |    0.1188463 |     0.1086980 |
+| gen_post_xg_a |  0.0982143 | 0.0146206 | 0.0290529 |    0.1036663 |     0.1371268 |
 
 ## Table 4
 
 ``` r
 stability_data |>
+  dplyr::filter(n_a + n_b >= 30) |>
   # Get metrics only
   dplyr::select(
     dplyr::starts_with("goal_pct"),
@@ -439,13 +440,13 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
-| goal_pct_a    |  0.1756582 | 0.0391476 | 0.0848959 |    0.1017865 |     0.1256231 |
-| gax_a         |  0.0635668 | 0.0371019 | 0.0775587 |    0.0333811 |     0.0451932 |
-| ega_a         |  0.0359854 | 0.0080632 | 0.0570395 |    0.0273394 |     0.0287748 |
-| rb_post_xg_a  |  0.0896275 | 0.0102973 | 0.0357115 |    0.1368973 |     0.1096092 |
-| gen_post_xg_a |  0.0818377 | 0.0048793 | 0.0304767 |    0.1188096 |     0.1328985 |
+|               | goal_pct_b |      gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|-----------:|-----------:|-------------:|--------------:|
+| goal_pct_a    |  0.2589755 | -0.0205521 | -0.0045566 |    0.0901779 |     0.0925456 |
+| gax_a         |  0.0369088 |  0.0111359 |  0.0280317 |   -0.0398064 |    -0.0215731 |
+| ega_a         | -0.0108390 | -0.0188603 | -0.0076556 |   -0.0334169 |    -0.0502244 |
+| rb_post_xg_a  |  0.1387011 |  0.0198329 | -0.0081443 |    0.1168845 |     0.1087846 |
+| gen_post_xg_a |  0.1756899 |  0.0360483 |  0.0097168 |    0.1396830 |     0.1429201 |
 
 ## Figure 6
 
