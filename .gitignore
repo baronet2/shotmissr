@@ -6,4 +6,5 @@ data/statsbomb_shots.rda
 data/statsbomb_shots_processed.rda
 data-raw/Hunter_et_al_2018_shots.csv
 data/Hunter_et_al_2018_shots.rda
-data/player_weight_posteriors.rda
+data/player_weights.rda
+data/shooting_skill_data.rda
