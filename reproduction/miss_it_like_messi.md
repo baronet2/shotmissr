@@ -4,6 +4,9 @@ Miss It Like Messi
 ``` r
 devtools::load_all()
 #> i Loading shotmissr
+#> Warning: Objects listed as exports, but not present in namespace:
+#> * global_weights
+#> * shot_metrics
 ```
 
 ## Table 1
@@ -221,60 +224,12 @@ Hunter_et_al_2018_shots |>
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
 
-## Estimate global weights
-
-``` r
-shots_data <- statsbomb_shots_processed |>
-  prepare_shooting_skill_data()
-
-mixture_model_components <- get_mixture_model_components()
-
-pdfs <- get_shot_probability_densities(
-  mixture_model_components,
-  shots = shots_data |>
-    dplyr::select(y_end_proj, z_end_proj) |>
-    as.matrix()
-)
-
-global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: EXPERIMENTAL ALGORITHM:
-#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
-#> Chain 1:   or buggy. The interface is subject to change.
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.084 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 840 seconds.
-#> Chain 1: Adjust your expectations accordingly!
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Begin eta adaptation.
-#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
-#> Chain 1: 
-#> Chain 1: Begin stochastic gradient ascent.
-#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-#> Chain 1:    100      -253242.244             1.000            1.000
-#> Chain 1:    200      -252968.504             0.501            1.000
-#> Chain 1:    300      -252938.710             0.001            0.001   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
-#> Chain 1: 
-#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-#> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 2.41. Resampling is disabled. Decreasing
-#> tol_rel_obj may help if variational algorithm has terminated prematurely.
-#> Otherwise consider using sampling instead.
-```
-
 ## Figure 3
 
 ``` r
-mixture_model_components |>
+mixture_model_components <- get_mixture_model_components()
+
+mixture_model_components[selected_components,] |>
   dplyr::mutate(
     y = purrr::map_dbl(mean, ~.[[1]]),
     z = purrr::map_dbl(mean, ~.[[2]]),
@@ -291,81 +246,10 @@ mixture_model_components |>
 
 ![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
 
-## Estimate player weights
+## Calculate player metrics
 
 ``` r
-half_season_shots_data <- statsbomb_shots_processed |>
-  dplyr::filter(!is.na(z_end_proj)) |>
-  dplyr::group_by(player, Season) |>
-  dplyr::mutate(first_half_season = dplyr::row_number() < dplyr::n() / 2) |>
-  dplyr::ungroup()
-
-shooting_skill_data <- get_player_groups(
-  half_season_shots_data,
-  grouping_cols = c("player", "Season", "first_half_season"),
-  group_size_threshold = 3
-)
-
-selected_components <- which(global_weights > 0.012)
-
-pdfs <- get_shot_probability_densities(
-  mixture_model_components[selected_components,],
-  shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj) |> as.matrix()
-)
-
-mixture_model_fit <- fit_player_weights(
-  pdfs,
-  shooting_skill_data$group_id,
-  alpha = 30,
-  iter = 500,
-  seed = 42
-)
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: EXPERIMENTAL ALGORITHM:
-#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
-#> Chain 1:   or buggy. The interface is subject to change.
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.161 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1610 seconds.
-#> Chain 1: Adjust your expectations accordingly!
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Begin eta adaptation.
-#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
-#> Chain 1: 
-#> Chain 1: Begin stochastic gradient ascent.
-#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-#> Chain 1:    100      -471292.882             1.000            1.000
-#> Chain 1:    200      -469268.411             0.502            1.000
-#> Chain 1:    300      -468540.833             0.003            0.004   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
-#> Chain 1: 
-#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-#> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 19.8. Resampling is disabled. Decreasing
-#> tol_rel_obj may help if variational algorithm has terminated prematurely.
-#> Otherwise consider using sampling instead.
-
-player_weights <- mixture_model_fit[["player_weights"]]
-```
-
-``` r
-component_values <- mixture_model_components[selected_components,] |>
-  get_component_values() |>
-  dplyr::pull(value)
-
-half_season_metrics <- shooting_skill_data |>
-  load_rb_post_xg(player_weights, component_values) |>
-  load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
-
-half_season_stats <- half_season_metrics |>
+half_season_stats <- shot_metrics |>
   dplyr::mutate(SBPostXg = ifelse(is.na(SBPostXg), 0, SBPostXg)) |>
   dplyr::mutate(goal_pct = (outcome == "Goal")) |>
   dplyr::mutate(
@@ -408,13 +292,13 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
-| goal_pct_a    |  0.1753718 | 0.0408746 | 0.0858735 |    0.0958211 |     0.1397574 |
-| gax_a         |  0.0642856 | 0.0384039 | 0.0785441 |    0.0276487 |     0.0659014 |
-| ega_a         |  0.0387612 | 0.0092856 | 0.0544922 |   -0.0058102 |     0.0292018 |
-| rb_post_xg_a  |  0.0732375 | 0.0032928 | 0.0168249 |    0.1188463 |     0.1086980 |
-| gen_post_xg_a |  0.0982143 | 0.0146206 | 0.0290529 |    0.1036663 |     0.1371268 |
+|               | goal_pct_b |     gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|----------:|-----------:|-------------:|--------------:|
+| goal_pct_a    |  0.0504398 | 0.0479698 |  0.0099914 |    0.0072382 |     0.0107215 |
+| gax_a         |  0.0434784 | 0.0444193 | -0.0000781 |   -0.0018262 |     0.0006315 |
+| ega_a         |  0.0371670 | 0.0322199 |  0.0072857 |    0.0117910 |     0.0165535 |
+| rb_post_xg_a  |  0.0356349 | 0.0316687 | -0.0015131 |    0.0699952 |     0.0805474 |
+| gen_post_xg_a |  0.0394548 | 0.0332513 | -0.0012836 |    0.0840899 |     0.0883617 |
 
 ## Table 4
 
@@ -440,13 +324,13 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |      gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|-----------:|-----------:|-------------:|--------------:|
-| goal_pct_a    |  0.2589755 | -0.0205521 | -0.0045566 |    0.0901779 |     0.0925456 |
-| gax_a         |  0.0369088 |  0.0111359 |  0.0280317 |   -0.0398064 |    -0.0215731 |
-| ega_a         | -0.0108390 | -0.0188603 | -0.0076556 |   -0.0334169 |    -0.0502244 |
-| rb_post_xg_a  |  0.1387011 |  0.0198329 | -0.0081443 |    0.1168845 |     0.1087846 |
-| gen_post_xg_a |  0.1756899 |  0.0360483 |  0.0097168 |    0.1396830 |     0.1429201 |
+|               | goal_pct_b |      gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|-----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.0909079 |  0.0731302 | 0.1085867 |   -0.0526890 |     0.0002168 |
+| gax_a         |  0.0769423 |  0.0614395 | 0.0898154 |   -0.0426120 |    -0.0012271 |
+| ega_a         | -0.0320833 | -0.0411309 | 0.0630560 |    0.0417377 |     0.0361398 |
+| rb_post_xg_a  | -0.0063821 | -0.0154622 | 0.1170909 |    0.1417057 |     0.1897055 |
+| gen_post_xg_a |  0.0403484 |  0.0326014 | 0.1230452 |    0.1680108 |     0.2002205 |
 
 ## Figure 6
 

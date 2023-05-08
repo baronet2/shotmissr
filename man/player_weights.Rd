@@ -11,7 +11,7 @@ An object of class \code{matrix} (inherits from \code{array}) with 2914 rows and
 player_weights
 }
 \description{
-The mixture model weights at the player-half-season level as fir by
+The mixture model weights at the player-half-season level as fit by
 variational inference via Stan.
 }
 \keyword{datasets}

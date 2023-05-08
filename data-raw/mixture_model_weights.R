@@ -28,8 +28,6 @@ shooting_skill_data <- get_player_groups(
   group_size_threshold = 5
 )
 
-usethis::use_data(shooting_skill_data, overwrite = TRUE)
-
 pdfs <- get_shot_probability_densities(
   mixture_model_components[selected_components,],
   shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj) |> as.matrix()
@@ -48,3 +46,14 @@ usethis::use_data(global_weights, overwrite = TRUE)
 
 player_weights <- mixture_model_fit[["player_weights"]]
 usethis::use_data(player_weights, overwrite = TRUE)
+
+
+component_values <- mixture_model_components[selected_components,] |>
+  get_component_values() |>
+  dplyr::pull(value)
+
+shot_metrics <- shooting_skill_data |>
+  load_rb_post_xg(player_weights, component_values) |>
+  load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
+
+usethis::use_data(shot_metrics, overwrite = TRUE)
