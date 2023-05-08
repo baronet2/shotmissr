@@ -10,28 +10,29 @@ devtools::load_all()
 
 ``` r
 statsbomb_shots_processed |>
+  prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
-  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep")
-#> # A tibble: 15 x 3
-#> # Groups:   League, Season [15]
-#>    League Season num_shots
-#>    <fct>   <int>     <int>
-#>  1 ARG      2019      3675
-#>  2 FR2      2018      4405
-#>  3 FR2      2019      3386
-#>  4 FR2      2020      4243
-#>  5 GR2      2018      4065
-#>  6 GR2      2019      4189
-#>  7 GR2      2020      3787
-#>  8 MLS      2018      5383
-#>  9 MLS      2019      5811
-#> 10 MLS      2020      4071
-#> 11 NED      2018      4212
-#> 12 NED      2019      3235
-#> 13 NED      2020      3960
-#> 14 USL      2019      2503
-#> 15 USL      2020      3551
+  dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
+  knitr::kable()
 ```
+
+| League | Season | num_shots |
+|:-------|-------:|----------:|
+| ARG    |   2019 |      2366 |
+| FR2    |   2018 |      2892 |
+| FR2    |   2019 |      2264 |
+| FR2    |   2020 |      2824 |
+| GR2    |   2018 |      2566 |
+| GR2    |   2019 |      2646 |
+| GR2    |   2020 |      2443 |
+| MLS    |   2018 |      3552 |
+| MLS    |   2019 |      3829 |
+| MLS    |   2020 |      2620 |
+| NED    |   2018 |      2774 |
+| NED    |   2019 |      2136 |
+| NED    |   2020 |      2603 |
+| USL    |   2019 |      1701 |
+| USL    |   2020 |      2332 |
 
 ## Figure 1
 
@@ -220,55 +221,13 @@ Hunter_et_al_2018_shots |>
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
 
-## Pipeline to compute metrics
+## Estimate global weights
 
 ``` r
-# Note: mixture_model_components and global_weights should already be filtered
-pipeline <- function(
-    shots_data,
-    grouping_cols = c("player"),
-    group_size_threshold = 30,
-    mixture_model_components,
-    global_weights,
-    alpha = Inf
-  ) {
-  shooting_skill_data <- shots_data |>
-    dplyr::group_by(dplyr::across(dplyr::all_of(grouping_cols))) |>
-    dplyr::filter(dplyr::n() >= group_size_threshold) |>
-    dplyr::mutate(group_id = dplyr::cur_group_id()) |>
-    dplyr::ungroup()
-  
-  if (nrow(shooting_skill_data) == 0) {
-    print("Could not run pipeline. No groups meet sample size threshold.")
-  }
-  
-  shots <- as.matrix(shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj))
-  
-  pdfs <- get_shot_probability_densities(
-    mixture_model_components,
-    shots
-  )
-  
-  player_weights <- fit_player_weights(
-    pdfs,
-    shooting_skill_data$group_id,
-    global_weights,
-    alpha = alpha
-  )
-  
-  shooting_skill_data |>
-    load_rb_post_xg(player_weights, mixture_model_components) |>
-    load_gen_post_xg(pdfs, mixture_model_components)
-}
-
 shots_data <- statsbomb_shots_processed |>
-  dplyr::filter(!is.na(z_end_proj)) |>
-  dplyr::group_by(player, Season) |>
-  dplyr::filter(dplyr::n() >= 50) |>
-  dplyr::ungroup()
+  prepare_shooting_skill_data()
 
-mixture_model_components <- get_mixture_model_components() |>
-  get_component_values()
+mixture_model_components <- get_mixture_model_components()
 
 pdfs <- get_shot_probability_densities(
   mixture_model_components,
@@ -276,33 +235,167 @@ pdfs <- get_shot_probability_densities(
     dplyr::select(y_end_proj, z_end_proj) |>
     as.matrix()
 )
-global_weights <- fit_global_weights(pdfs)
-selected_components <- which(global_weights > 0.012)
 
-metrics <- pipeline(
-  shots_data = shots_data,
-  group_size_threshold = 10,
-  mixture_model_components = mixture_model_components[selected_components,],
-  global_weights = global_weights[selected_components]
-)
+global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: EXPERIMENTAL ALGORITHM:
+#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
+#> Chain 1:   or buggy. The interface is subject to change.
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Gradient evaluation took 0.084 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 840 seconds.
+#> Chain 1: Adjust your expectations accordingly!
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Begin eta adaptation.
+#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
+#> Chain 1: 
+#> Chain 1: Begin stochastic gradient ascent.
+#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+#> Chain 1:    100      -253242.244             1.000            1.000
+#> Chain 1:    200      -252968.504             0.501            1.000
+#> Chain 1:    300      -252938.710             0.001            0.001   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+#> Chain 1: 
+#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+#> Chain 1: COMPLETED.
+#> Warning: Pareto k diagnostic value is 2.41. Resampling is disabled. Decreasing
+#> tol_rel_obj may help if variational algorithm has terminated prematurely.
+#> Otherwise consider using sampling instead.
 ```
 
-## Interseason stability
+## Figure 3
 
 ``` r
-season_stats <- metrics |>
+mixture_model_components |>
+  dplyr::mutate(
+    y = purrr::map_dbl(mean, ~.[[1]]),
+    z = purrr::map_dbl(mean, ~.[[2]]),
+    weight = global_weights,
+    lambda = as.factor(lambda)
+  ) |>
+  dplyr::filter(weight > 0.012) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  ggplot2::geom_point(colour = "blue") +
+  ggplot2::scale_size_manual(values = c(3, 7)) +
+  plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  ggplot2::theme_bw()
+```
+
+![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
+
+## Estimate player weights
+
+``` r
+half_season_shots_data <- statsbomb_shots_processed |>
+  dplyr::filter(!is.na(z_end_proj)) |>
   dplyr::group_by(player, Season) |>
+  dplyr::mutate(first_half_season = dplyr::row_number() < dplyr::n() / 2) |>
+  dplyr::ungroup()
+
+shooting_skill_data <- get_player_groups(
+  half_season_shots_data,
+  grouping_cols = c("player", "Season", "first_half_season"),
+  group_size_threshold = 3
+)
+
+selected_components <- which(global_weights > 0.012)
+
+pdfs <- get_shot_probability_densities(
+  mixture_model_components[selected_components,],
+  shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj) |> as.matrix()
+)
+
+mixture_model_fit <- fit_player_weights(
+  pdfs,
+  shooting_skill_data$group_id,
+  alpha = 30,
+  iter = 500,
+  seed = 42
+)
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: EXPERIMENTAL ALGORITHM:
+#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
+#> Chain 1:   or buggy. The interface is subject to change.
+#> Chain 1: ------------------------------------------------------------
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Gradient evaluation took 0.161 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1610 seconds.
+#> Chain 1: Adjust your expectations accordingly!
+#> Chain 1: 
+#> Chain 1: 
+#> Chain 1: Begin eta adaptation.
+#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
+#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
+#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
+#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
+#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
+#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
+#> Chain 1: 
+#> Chain 1: Begin stochastic gradient ascent.
+#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
+#> Chain 1:    100      -471292.882             1.000            1.000
+#> Chain 1:    200      -469268.411             0.502            1.000
+#> Chain 1:    300      -468540.833             0.003            0.004   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
+#> Chain 1: 
+#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
+#> Chain 1: COMPLETED.
+#> Warning: Pareto k diagnostic value is 19.8. Resampling is disabled. Decreasing
+#> tol_rel_obj may help if variational algorithm has terminated prematurely.
+#> Otherwise consider using sampling instead.
+
+player_weights <- mixture_model_fit[["player_weights"]]
+```
+
+``` r
+component_values <- mixture_model_components[selected_components,] |>
+  get_component_values() |>
+  dplyr::pull(value)
+
+half_season_metrics <- shooting_skill_data |>
+  load_rb_post_xg(player_weights, component_values) |>
+  load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
+
+half_season_stats <- half_season_metrics |>
+  dplyr::mutate(SBPostXg = ifelse(is.na(SBPostXg), 0, SBPostXg)) |>
+  dplyr::mutate(goal_pct = (outcome == "Goal")) |>
+  dplyr::mutate(
+    gax = goal_pct - SBPreXg,
+    ega = SBPostXg - SBPreXg
+  ) |>
+  dplyr::group_by(player, Season, first_half_season) |>
   dplyr::summarise(
-    dplyr::across(dplyr::matches("xg|xG"), mean, na.rm = TRUE),
+    dplyr::across(dplyr::matches("goal_pct|gax|ega|_xg"), mean, na.rm = TRUE),
+    n = dplyr::n(),
     .groups = "keep"
   )
+```
 
-season_stats |>
-  dplyr::inner_join(season_stats, by = c("player"), suffix = c("_a", "_b")) |>
-  dplyr::filter(Season_a + 1 == Season_b) |>
-  dplyr::ungroup() |>
+## Table 3
+
+``` r
+stability_data <- half_season_stats |>
+  dplyr::inner_join(half_season_stats, by = c("player", "Season"), suffix = c("_a", "_b")) |>
+  dplyr::filter(first_half_season_a, !first_half_season_b) |>
+  dplyr::ungroup()
+
+stability_data |>
   # Get metrics only
-  dplyr::select(dplyr::matches("xg|Xg")) |>
+  dplyr::select(
+    dplyr::starts_with("goal_pct"),
+    dplyr::starts_with("gax"),
+    dplyr::starts_with("ega"),
+    dplyr::matches("_xg")
+  ) |>
   # Get correlation matrix
   cor() |>
   # Subset correlation matrix so season A is rows and season B is columns
@@ -311,10 +404,73 @@ season_stats |>
   t() |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
-  as.matrix()
-#>               SBPreXg_b SBPostXg_b rb_post_xg_b gen_post_xg_b
-#> SBPreXg_a            NA         NA           NA            NA
-#> SBPostXg_a           NA         NA           NA            NA
-#> rb_post_xg_a         NA         NA           NA            NA
-#> gen_post_xg_a        NA         NA           NA            NA
+  as.matrix() |>
+  knitr::kable()
+```
+
+|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.1753718 | 0.0408746 | 0.0858735 |    0.0958211 |     0.1397574 |
+| gax_a         |  0.0642856 | 0.0384039 | 0.0785441 |    0.0276487 |     0.0659014 |
+| ega_a         |  0.0387612 | 0.0092856 | 0.0544922 |   -0.0058102 |     0.0292018 |
+| rb_post_xg_a  |  0.0732375 | 0.0032928 | 0.0168249 |    0.1188463 |     0.1086980 |
+| gen_post_xg_a |  0.0982143 | 0.0146206 | 0.0290529 |    0.1036663 |     0.1371268 |
+
+## Table 4
+
+``` r
+stability_data |>
+  dplyr::filter(n_a + n_b >= 30) |>
+  # Get metrics only
+  dplyr::select(
+    dplyr::starts_with("goal_pct"),
+    dplyr::starts_with("gax"),
+    dplyr::starts_with("ega"),
+    dplyr::matches("_xg")
+  ) |>
+  # Get correlation matrix
+  cor() |>
+  # Subset correlation matrix so season A is rows and season B is columns
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_a")) |>
+  t() |>
+  data.frame() |>
+  dplyr::select(dplyr::ends_with("_b")) |>
+  as.matrix() |>
+  knitr::kable()
+```
+
+|               | goal_pct_b |      gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|-----------:|-----------:|-------------:|--------------:|
+| goal_pct_a    |  0.2589755 | -0.0205521 | -0.0045566 |    0.0901779 |     0.0925456 |
+| gax_a         |  0.0369088 |  0.0111359 |  0.0280317 |   -0.0398064 |    -0.0215731 |
+| ega_a         | -0.0108390 | -0.0188603 | -0.0076556 |   -0.0334169 |    -0.0502244 |
+| rb_post_xg_a  |  0.1387011 |  0.0198329 | -0.0081443 |    0.1168845 |     0.1087846 |
+| gen_post_xg_a |  0.1756899 |  0.0360483 |  0.0097168 |    0.1396830 |     0.1429201 |
+
+## Figure 6
+
+``` r
+get_stability_above_threshold <- function(metric, n) {
+  filtered_data <- stability_data |>
+    dplyr::filter(n_a + n_b >= n)
+  
+  # TODO bootstrap rows here to get estimate of lower and upper bound
+  
+  cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
+}
+
+expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_xg")) |>
+  dplyr::mutate(
+    stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
+  ) |>
+  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
+  ggplot2::geom_line() +
+  ggplot2::theme_bw()
+```
+
+![](miss_it_like_messi_files/figure-gfm/figure_6-1.png)<!-- -->
+
+``` r
+# TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
 ```

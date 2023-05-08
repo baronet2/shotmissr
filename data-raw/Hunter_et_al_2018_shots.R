@@ -6,4 +6,4 @@ Hunter_et_al_2018_shots <- read.csv("data-raw/Hunter_et_al_2018_shots.csv") |>
     vertical_error_yards = VerticalErrorYards
   )
 
-usethis::use_data(Hunter_et_al_2018_shots, overwrite = TRUE, internal = TRUE)
+usethis::use_data(Hunter_et_al_2018_shots, overwrite = TRUE)
