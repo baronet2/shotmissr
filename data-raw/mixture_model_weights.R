@@ -16,6 +16,7 @@ global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
 selected_components <- which(global_weights > 0.01)
 usethis::use_data(selected_components, overwrite = TRUE)
 
+# Differences: prepare_data instead of filter out null, group by season but not league, pruning threshold...
 half_season_shots_data <- statsbomb_shots_processed |>
   prepare_shooting_skill_data() |>
   dplyr::group_by(player, Season) |>
