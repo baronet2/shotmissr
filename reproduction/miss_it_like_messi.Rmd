@@ -24,7 +24,6 @@ devtools::load_all()
 ## Table 1
 ```{r table_1}
 statsbomb_shots_processed |>
-  prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
   knitr::kable()
@@ -86,6 +85,7 @@ shots |>
     z = post_shot_xg), bins = 100, show.legend = FALSE) +
   plot_goalposts(color = "red", cex = 2) +
   ggplot2::theme_bw()
+
 ```
 
 ## Figure 7

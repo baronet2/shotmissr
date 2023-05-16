@@ -13,7 +13,6 @@ devtools::load_all()
 
 ``` r
 statsbomb_shots_processed |>
-  prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
   knitr::kable()
@@ -21,21 +20,21 @@ statsbomb_shots_processed |>
 
 | League | Season | num_shots |
 |:-------|-------:|----------:|
-| ARG    |   2019 |      3206 |
-| FR2    |   2018 |      4183 |
-| FR2    |   2019 |      3100 |
-| FR2    |   2020 |      4016 |
-| GR2    |   2018 |      3810 |
-| GR2    |   2019 |      3836 |
-| GR2    |   2020 |      3593 |
-| MLS    |   2018 |      5448 |
-| MLS    |   2019 |      5830 |
-| MLS    |   2020 |      3992 |
-| NED    |   2018 |      4273 |
-| NED    |   2019 |      3186 |
-| NED    |   2020 |      3906 |
-| USL    |   2019 |      2471 |
-| USL    |   2020 |      3547 |
+| ARG    |   2019 |      2366 |
+| FR2    |   2018 |      2892 |
+| FR2    |   2019 |      2264 |
+| FR2    |   2020 |      2824 |
+| GR2    |   2018 |      2566 |
+| GR2    |   2019 |      2646 |
+| GR2    |   2020 |      2443 |
+| MLS    |   2018 |      3552 |
+| MLS    |   2019 |      3829 |
+| MLS    |   2020 |      2620 |
+| NED    |   2018 |      2774 |
+| NED    |   2019 |      2136 |
+| NED    |   2020 |      2603 |
+| USL    |   2019 |      1701 |
+| USL    |   2020 |      2332 |
 
 ## Figure 1
 
@@ -294,11 +293,11 @@ stability_data |>
 
 |               | goal_pct_b |     gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
 |:--------------|-----------:|----------:|-----------:|-------------:|--------------:|
-| goal_pct_a    |  0.1224854 | 0.0308243 |  0.0304649 |    0.0992770 |     0.1309764 |
-| gax_a         |  0.0301429 | 0.0278450 | -0.0003070 |    0.0245736 |     0.0477858 |
-| ega_a         |  0.0271270 | 0.0135368 |  0.0108632 |    0.0086925 |     0.0340898 |
-| rb_post_xg_a  |  0.0870198 | 0.0215710 |  0.0171080 |    0.0996360 |     0.1082299 |
-| gen_post_xg_a |  0.0953761 | 0.0182233 |  0.0232076 |    0.0929100 |     0.1175927 |
+| goal_pct_a    |  0.0504398 | 0.0479698 |  0.0099914 |    0.0116243 |     0.0314498 |
+| gax_a         |  0.0434784 | 0.0444193 | -0.0000781 |    0.0004993 |     0.0207347 |
+| ega_a         |  0.0371670 | 0.0322199 |  0.0072857 |    0.0302872 |     0.0171759 |
+| rb_post_xg_a  |  0.0235098 | 0.0189044 |  0.0313871 |    0.1297171 |     0.1205273 |
+| gen_post_xg_a |  0.0276133 | 0.0210376 |  0.0376509 |    0.1380937 |     0.1515649 |
 
 ## Table 4
 
@@ -324,34 +323,33 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |      gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|-----------:|-----------:|-------------:|--------------:|
-| goal_pct_a    |  0.1048948 | -0.0262012 | -0.0553941 |    0.0419397 |     0.0170022 |
-| gax_a         | -0.0261181 | -0.0120890 | -0.0626812 |   -0.0403664 |    -0.0690342 |
-| ega_a         |  0.0346861 |  0.0549648 |  0.0157283 |   -0.0342910 |    -0.0710838 |
-| rb_post_xg_a  |  0.1375641 |  0.0444550 |  0.0310336 |    0.1199744 |     0.1150164 |
-| gen_post_xg_a |  0.1533827 |  0.0622375 |  0.0242151 |    0.1164236 |     0.1044400 |
+|               | goal_pct_b |      gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|-----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.0909079 |  0.0731302 | 0.1085867 |   -0.0132172 |     0.0548137 |
+| gax_a         |  0.0769423 |  0.0614395 | 0.0898154 |   -0.0014298 |     0.0534517 |
+| ega_a         | -0.0320833 | -0.0411309 | 0.0630560 |    0.1397886 |     0.1415280 |
+| rb_post_xg_a  |  0.0064516 |  0.0050224 | 0.1288577 |    0.1698563 |     0.2197126 |
+| gen_post_xg_a | -0.0253883 | -0.0219570 | 0.0736002 |    0.1779928 |     0.2351998 |
 
 ``` r
 stability_data |>
   dplyr::filter(n_a + n_b >= 50)
-#> # A tibble: 49 x 16
-#>    player  Season first~1 rb_po~2 gen_p~3 goal_~4   gax_a    ega_a   n_a first~5
-#>    <fct>    <int> <lgl>     <dbl>   <dbl>   <dbl>   <dbl>    <dbl> <int> <lgl>  
-#>  1 Aleksa~   2018 TRUE      0.178   0.182  0.16    0.0795  0.0330     25 FALSE  
-#>  2 Aleksa~   2019 TRUE      0.173   0.170  0.0938  0.0423  0.0199     32 FALSE  
-#>  3 Alexan~   2019 TRUE      0.178   0.178  0.125   0.0460  0.0496     24 FALSE  
-#>  4 Branim~   2020 TRUE      0.176   0.175  0.115  -0.0335 -0.00227    26 FALSE  
-#>  5 Carlos~   2018 TRUE      0.178   0.182  0.111   0.0491  0.0122     27 FALSE  
-#>  6 Carlos~   2019 TRUE      0.180   0.181  0.220   0.123   0.0547     41 FALSE  
-#>  7 Carlos~   2018 TRUE      0.179   0.174  0.111   0.0160  0.00209    27 FALSE  
-#>  8 Cristi~   2018 TRUE      0.176   0.174  0.0968  0.0264  0.0445     31 FALSE  
-#>  9 Cristi~   2019 TRUE      0.174   0.165  0.0345 -0.0201  0.0220     29 FALSE  
-#> 10 David ~   2018 TRUE      0.175   0.172  0.167   0.0539  0.0820     30 FALSE  
-#> # ... with 39 more rows, 6 more variables: rb_post_xg_b <dbl>,
-#> #   gen_post_xg_b <dbl>, goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>,
-#> #   and abbreviated variable names 1: first_half_season_a, 2: rb_post_xg_a,
-#> #   3: gen_post_xg_a, 4: goal_pct_a, 5: first_half_season_b
+#> # A tibble: 9 x 16
+#>   player   Season first~1 rb_po~2 gen_p~3 goal_~4   gax_a    ega_a   n_a first~5
+#>   <fct>     <int> <lgl>     <dbl>   <dbl>   <dbl>   <dbl>    <dbl> <int> <lgl>  
+#> 1 Aleksan~   2019 TRUE     0.0589  0.0591  0.0741  0.0423  0.0216     27 FALSE  
+#> 2 Carlos ~   2019 TRUE     0.0610  0.0607  0.0645  0.0259  0.0196     31 FALSE  
+#> 3 Gonzalo~   2019 TRUE     0.0590  0.0572  0      -0.0357 -0.0162     24 FALSE  
+#> 4 Hakim Z~   2018 TRUE     0.0616  0.0618  0.143   0.112   0.0295     42 FALSE  
+#> 5 Hakim Z~   2019 TRUE     0.0611  0.0617  0.08    0.0426  0.0376     25 FALSE  
+#> 6 Miguel ~   2018 TRUE     0.0593  0.0586  0.0667  0.0226  0.00213    30 FALSE  
+#> 7 Oussama~   2020 TRUE     0.0616  0.0605  0.0526  0.0204 -0.00320    38 FALSE  
+#> 8 Sebasti~   2018 TRUE     0.0580  0.0566  0.0278 -0.0138  0.0182     36 FALSE  
+#> 9 Steven ~   2020 TRUE     0.0616  0.0618  0.103   0.0682  0.00110    29 FALSE  
+#> # ... with 6 more variables: rb_post_xg_b <dbl>, gen_post_xg_b <dbl>,
+#> #   goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>, and abbreviated
+#> #   variable names 1: first_half_season_a, 2: rb_post_xg_a, 3: gen_post_xg_a,
+#> #   4: goal_pct_a, 5: first_half_season_b
 ```
 
 ## Figure 6

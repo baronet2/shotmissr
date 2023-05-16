@@ -1,13 +1,10 @@
 devtools::load_all()
 
-shots_data <- statsbomb_shots_processed |>
-  prepare_shooting_skill_data()
-
 mixture_model_components <- get_mixture_model_components()
 
 pdfs <- get_shot_probability_densities(
   mixture_model_components,
-  shots = shots_data |>
+  shots = statsbomb_shots_processed |>
     dplyr::select(y_end_proj, z_end_proj) |>
     as.matrix()
 )
@@ -18,7 +15,6 @@ usethis::use_data(selected_components, overwrite = TRUE)
 
 # Differences: prepare_data instead of filter out null, group by season but not league, pruning threshold...
 half_season_shots_data <- statsbomb_shots_processed |>
-  prepare_shooting_skill_data() |>
   dplyr::group_by(player, Season) |>
   dplyr::mutate(first_half_season = dplyr::row_number() < dplyr::n() / 2) |>
   dplyr::ungroup()

@@ -25,11 +25,7 @@ stripGlmLR = function(cm) {
 }
 
 data <- statsbomb_shots_processed %>%
-  filter_post_xg_shots() %>%
-  flip_left_foot_shot_end_coords() %>%
-  dplyr::mutate(Goal = outcome == "Goal",
-                y = y_end_proj,
-                z = z_end_proj)
+  dplyr::mutate(Goal = outcome == "Goal")
 
 post_shot_xg_model <- glm(Goal ~ stats::poly(y_end_proj, 3) + stats::poly(z_end_proj, 3), data = data, family = "binomial") %>%
   stripGlmLR()

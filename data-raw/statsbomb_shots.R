@@ -24,6 +24,6 @@ statsbomb_shots_processed <- statsbomb_shots |>
   adjust_shot_end_coords() %>%
   project_shot_end_coords() %>%
   dplyr::select(-do_adjust_y, -do_project_saved) %>%
-  dplyr::filter(!is.na(z_end_proj))
+  prepare_shooting_skill_data()
 
 usethis::use_data(statsbomb_shots_processed, overwrite = TRUE)
