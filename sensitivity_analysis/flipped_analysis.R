@@ -1,5 +1,5 @@
-setwd("sensitivity_analysis")
 devtools::load_all()
+# setwd("sensitivity_analysis")
 
 mixture_model_components <- get_mixture_model_components()
 
@@ -121,7 +121,30 @@ get_plot <- function(stability_data) {
 }
 
 correlations |>
-  ggplot2::ggplot(ggplot2::aes(x = threshold, y = correlation, colour = metric)) +
+  dplyr::mutate(
+    metric = dplyr::case_when(
+      metric == "gax" ~ "GAX",
+      metric == "ega" ~ "EGA",
+      metric == "rb_post_xg" ~ "RBPostXg",
+      metric == "gen_post_xg" ~ "GenPostXg"
+    )
+  ) |>
+  dplyr::rename(
+    `Minimum Shot Distance` = distance_limit,
+    `Maximum Pre-Shot xG` = xg_limit,
+    Metric = metric
+  ) |>
+  ggplot2::ggplot(ggplot2::aes(x = threshold, y = correlation, colour = Metric)) +
   ggplot2::geom_line() +
-  ggplot2::theme_bw() +
-  ggplot2::facet_grid(xg_limit ~ distance_limit, labeller = "label_both")
+  ggplot2::theme_light() +
+  ggplot2::facet_grid(`Maximum Pre-Shot xG` ~ `Minimum Shot Distance`, labeller = "label_both") +
+  ggplot2::labs(
+    x = "Minimum Sample Size",
+    y = "Correlation"
+  )
+
+ggplot2::ggsave(
+  "flipped_plots.png",
+  width = 8,
+  height = 6
+)
