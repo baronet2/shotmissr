@@ -168,9 +168,8 @@ filter_shooting_skill_data <- function(data)
     dplyr::filter(
       !is.na(y_end_proj),
       !is.na(z_end_proj),
-      # SBPreXg < 0.1,
-      distance >= 6,
-      SBPreXg < 0.5,
+      SBPreXg < 0.1,
+      distance >= 15,
       grepl("Foot", body_part),
       grepl("Open Play", type)
     )
@@ -190,12 +189,11 @@ flip_left_foot_shot_end_coords <- function(data)
 {
   data %>%
     dplyr::mutate(
-      # y_end_proj = ifelse(
-      #   body_part == "Left Foot",
-      #   2 * y_center_line() - y_end_proj,
-      #   y_end_proj
-      # )
-      y_end_proj = y_end_proj
+      y_end_proj = ifelse(
+        body_part == "Left Foot",
+        2 * y_center_line() - y_end_proj,
+        y_end_proj
+      )
     )
 }
 
