@@ -34,13 +34,21 @@ statsbomb_shots_processed |>
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 8) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ## Figure 2
@@ -50,25 +58,41 @@ statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 
 statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end_proj,
     y = z_end_proj,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ## Figure 5 
@@ -79,13 +103,19 @@ shots <- expand.grid(y = yy, z = zz)
 shots |>
   dplyr::mutate(post_shot_xg = predict_post_xg(y, z)) |>
   ggplot2::ggplot() +
-  ggplot2::geom_contour_filled(mapping = ggplot2::aes(
-    x = y,
-    y = z,
-    z = post_shot_xg), bins = 100, show.legend = FALSE) +
+  ggplot2::geom_contour_filled(
+    mapping = ggplot2::aes(x = y, y = z, z = post_shot_xg),
+    bins = 100,
+    show.legend = FALSE
+  ) +
   plot_goalposts(color = "red", cex = 2) +
-  ggplot2::theme_bw()
-
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 ```
 
 ## Figure 7
@@ -94,13 +124,21 @@ shots |>
 statsbomb_shots |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 8) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ## Figure 8
@@ -143,7 +181,8 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_contour_filled(
     data = gaussians,
     mapping = ggplot2::aes(x = y, y = z, z = prob_low),
-    breaks = seq(0.01, 0.7, by = 0.07)
+    breaks = seq(0.01, 0.7, by = 0.07),
+    show.legend = FALSE
   ) +
   # Make Gaussian contour colour blue
   ggplot2::scale_fill_brewer() +
@@ -157,7 +196,13 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4.5) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 
 Hunter_et_al_2018_shots |>
   # Get high-target shots
@@ -171,7 +216,8 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_contour_filled(
     data = gaussians,
     mapping = ggplot2::aes(x = y, y = z, z = prob_high),
-    breaks = seq(0.01, 0.3, by = 0.03)
+    breaks = seq(0.01, 0.3, by = 0.03),
+    show.legend = FALSE
   ) +
   # Make Gaussian contour colour blue
   ggplot2::scale_fill_brewer() +
@@ -185,7 +231,13 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4.5) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 
 ```
 
@@ -202,11 +254,18 @@ mixture_model_components[selected_components,] |>
     lambda = as.factor(lambda)
   ) |>
   dplyr::filter(weight > 0.012) |>
-  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  dplyr::rename(Weight = weight) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda)) +
   ggplot2::geom_point(colour = "blue") +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 ```
 
 ## Calculate player metrics
@@ -303,7 +362,7 @@ expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_x
   ) |>
   ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
   ggplot2::geom_line() +
-  ggplot2::theme_bw()
+  ggplot2::theme_light()
 # TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
 
 ```

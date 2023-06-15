@@ -4,9 +4,6 @@ Miss It Like Messi
 ``` r
 devtools::load_all()
 #> i Loading shotmissr
-#> Warning: Objects listed as exports, but not present in namespace:
-#> * global_weights
-#> * shot_metrics
 ```
 
 ## Table 1
@@ -20,21 +17,21 @@ statsbomb_shots_processed |>
 
 | League | Season | num_shots |
 |:-------|-------:|----------:|
-| ARG    |   2019 |      2366 |
-| FR2    |   2018 |      2892 |
-| FR2    |   2019 |      2264 |
-| FR2    |   2020 |      2824 |
-| GR2    |   2018 |      2566 |
-| GR2    |   2019 |      2646 |
-| GR2    |   2020 |      2443 |
-| MLS    |   2018 |      3552 |
-| MLS    |   2019 |      3829 |
-| MLS    |   2020 |      2620 |
-| NED    |   2018 |      2774 |
-| NED    |   2019 |      2136 |
-| NED    |   2020 |      2603 |
-| USL    |   2019 |      1701 |
-| USL    |   2020 |      2332 |
+| ARG    |   2019 |      3409 |
+| FR2    |   2018 |      4438 |
+| FR2    |   2019 |      3290 |
+| FR2    |   2020 |      4300 |
+| GR2    |   2018 |      4086 |
+| GR2    |   2019 |      4099 |
+| GR2    |   2020 |      3881 |
+| MLS    |   2018 |      5857 |
+| MLS    |   2019 |      6220 |
+| MLS    |   2020 |      4294 |
+| NED    |   2018 |      4571 |
+| NED    |   2019 |      3384 |
+| NED    |   2020 |      4198 |
+| USL    |   2019 |      2677 |
+| USL    |   2020 |      3823 |
 
 ## Figure 1
 
@@ -42,13 +39,21 @@ statsbomb_shots_processed |>
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 8) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_1-1.png)<!-- -->
@@ -60,13 +65,22 @@ statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
+#> Warning: Removed 13 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-1.png)<!-- -->
@@ -77,13 +91,22 @@ statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end_proj,
     y = z_end_proj,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
+#> Warning: Removed 2 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-2.png)<!-- -->
@@ -97,12 +120,19 @@ shots <- expand.grid(y = yy, z = zz)
 shots |>
   dplyr::mutate(post_shot_xg = predict_post_xg(y, z)) |>
   ggplot2::ggplot() +
-  ggplot2::geom_contour_filled(mapping = ggplot2::aes(
-    x = y,
-    y = z,
-    z = post_shot_xg), bins = 100, show.legend = FALSE) +
+  ggplot2::geom_contour_filled(
+    mapping = ggplot2::aes(x = y, y = z, z = post_shot_xg),
+    bins = 100,
+    show.legend = FALSE
+  ) +
   plot_goalposts(color = "red", cex = 2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_5-1.png)<!-- -->
@@ -113,13 +143,21 @@ shots |>
 statsbomb_shots |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 8) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_7-1.png)<!-- -->
@@ -171,7 +209,8 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_contour_filled(
     data = gaussians,
     mapping = ggplot2::aes(x = y, y = z, z = prob_low),
-    breaks = seq(0.01, 0.7, by = 0.07)
+    breaks = seq(0.01, 0.7, by = 0.07),
+    show.legend = FALSE
   ) +
   # Make Gaussian contour colour blue
   ggplot2::scale_fill_brewer() +
@@ -185,7 +224,15 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4.5) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
+#> Warning: Removed 1800 rows containing non-finite values (stat_contour_filled).
+#> Warning: Removed 1 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-1.png)<!-- -->
@@ -204,7 +251,8 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_contour_filled(
     data = gaussians,
     mapping = ggplot2::aes(x = y, y = z, z = prob_high),
-    breaks = seq(0.01, 0.3, by = 0.03)
+    breaks = seq(0.01, 0.3, by = 0.03),
+    show.legend = FALSE
   ) +
   # Make Gaussian contour colour blue
   ggplot2::scale_fill_brewer() +
@@ -218,7 +266,15 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4.5) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
+#> Warning: Removed 1800 rows containing non-finite values (stat_contour_filled).
+#> Warning: Removed 5 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
@@ -236,11 +292,18 @@ mixture_model_components[selected_components,] |>
     lambda = as.factor(lambda)
   ) |>
   dplyr::filter(weight > 0.012) |>
-  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
+  dplyr::rename(Weight = weight) |>
+  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda)) +
   ggplot2::geom_point(colour = "blue") +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
@@ -370,7 +433,7 @@ expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_x
   ) |>
   ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
   ggplot2::geom_line() +
-  ggplot2::theme_bw()
+  ggplot2::theme_light()
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_6-1.png)<!-- -->
