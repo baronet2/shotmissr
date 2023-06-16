@@ -1,3 +1,5 @@
+devtools::load_all()
+
 load_data <- function(file_path) {
   read.csv(file_path, encoding = "UTF-8", header = TRUE) |>
     dplyr::select(League, Season, player, position,

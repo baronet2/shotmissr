@@ -1,4 +1,4 @@
-devtools::load_all()
+devtools::load_all("..")
 
 mixture_model_components <- get_mixture_model_components()
 
@@ -58,11 +58,3 @@ for (xg_limit in c(0.1, 0.5, 1)) {
     )
   }
 }
-
-# component_values <- mixture_model_components[selected_components,] |>
-#   get_component_values() |>
-#   dplyr::pull(value)
-#
-# shot_metrics <- shooting_skill_data |>
-#   load_rb_post_xg(player_weights, component_values) |>
-#   load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)

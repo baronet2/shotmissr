@@ -1,5 +1,5 @@
-setwd("sensitivity_analysis")
 devtools::load_all()
+setwd("sensitivity_analysis")
 
 mixture_model_components <- get_mixture_model_components()
 

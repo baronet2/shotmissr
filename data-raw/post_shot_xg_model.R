@@ -1,3 +1,5 @@
+devtools::load_all()
+
 # From https://win-vector.com/2014/05/30/trimming-the-fat-from-glm-models-in-r/
 stripGlmLR = function(cm) {
   cm$y = c()
@@ -25,6 +27,7 @@ stripGlmLR = function(cm) {
 }
 
 data <- statsbomb_shots_processed %>%
+  filter_post_xg_shots() %>%
   dplyr::mutate(Goal = outcome == "Goal")
 
 post_shot_xg_model <- glm(Goal ~ stats::poly(y_end_proj, 3) + stats::poly(z_end_proj, 3), data = data, family = "binomial") %>%
