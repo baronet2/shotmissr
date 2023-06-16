@@ -46,6 +46,7 @@ statsbomb_shots_processed |>
     y = z_end,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 8) +
@@ -72,6 +73,7 @@ statsbomb_shots_processed |>
     y = z_end,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 3) +
@@ -98,6 +100,7 @@ statsbomb_shots_processed |>
     y = z_end_proj,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 3) +
@@ -126,6 +129,7 @@ shots |>
     show.legend = FALSE
   ) +
   plot_goalposts(color = "red", cex = 2) +
+  plot_grass(color = "darkgreen", cex = 2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 3) +
@@ -150,6 +154,7 @@ statsbomb_shots |>
     y = z_end,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 8) +
@@ -224,6 +229,7 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 4.5) +
@@ -266,6 +272,7 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 4.5) +
@@ -297,6 +304,7 @@ mixture_model_components[selected_components,] |>
   ggplot2::geom_point(colour = "blue") +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 3) +
@@ -354,13 +362,13 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |     gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|----------:|-----------:|-------------:|--------------:|
-| goal_pct_a    |  0.0504398 | 0.0479698 |  0.0099914 |    0.0116243 |     0.0314498 |
-| gax_a         |  0.0434784 | 0.0444193 | -0.0000781 |    0.0004993 |     0.0207347 |
-| ega_a         |  0.0371670 | 0.0322199 |  0.0072857 |    0.0302872 |     0.0171759 |
-| rb_post_xg_a  |  0.0235098 | 0.0189044 |  0.0313871 |    0.1297171 |     0.1205273 |
-| gen_post_xg_a |  0.0276133 | 0.0210376 |  0.0376509 |    0.1380937 |     0.1515649 |
+|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.2027644 | 0.0358458 | 0.0383046 |    0.1228743 |     0.1638671 |
+| gax_a         |  0.0439170 | 0.0353784 | 0.0249364 |    0.0127014 |     0.0349669 |
+| ega_a         |  0.0202310 | 0.0052795 | 0.0359962 |    0.0131409 |     0.0442071 |
+| rb_post_xg_a  |  0.1489195 | 0.0172616 | 0.0209663 |    0.1992753 |     0.1924053 |
+| gen_post_xg_a |  0.1648546 | 0.0224296 | 0.0422315 |    0.1943594 |     0.2267084 |
 
 ## Table 4
 
@@ -386,33 +394,34 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |      gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|-----------:|----------:|-------------:|--------------:|
-| goal_pct_a    |  0.0909079 |  0.0731302 | 0.1085867 |   -0.0132172 |     0.0548137 |
-| gax_a         |  0.0769423 |  0.0614395 | 0.0898154 |   -0.0014298 |     0.0534517 |
-| ega_a         | -0.0320833 | -0.0411309 | 0.0630560 |    0.1397886 |     0.1415280 |
-| rb_post_xg_a  |  0.0064516 |  0.0050224 | 0.1288577 |    0.1698563 |     0.2197126 |
-| gen_post_xg_a | -0.0253883 | -0.0219570 | 0.0736002 |    0.1779928 |     0.2351998 |
+|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
+| goal_pct_a    |  0.2860967 | 0.0409510 | 0.0257428 |    0.1449043 |     0.1456253 |
+| gax_a         |  0.0373490 | 0.0514288 | 0.0195463 |   -0.0458517 |    -0.0546989 |
+| ega_a         |  0.0019526 | 0.0365588 | 0.0183749 |   -0.0395099 |    -0.0310349 |
+| rb_post_xg_a  |  0.2164462 | 0.0481730 | 0.0255283 |    0.2333471 |     0.2565853 |
+| gen_post_xg_a |  0.2214890 | 0.0442887 | 0.0190876 |    0.2436387 |     0.2793804 |
 
 ``` r
 stability_data |>
   dplyr::filter(n_a + n_b >= 50)
-#> # A tibble: 9 x 16
-#>   player   Season first~1 rb_po~2 gen_p~3 goal_~4   gax_a    ega_a   n_a first~5
-#>   <fct>     <int> <lgl>     <dbl>   <dbl>   <dbl>   <dbl>    <dbl> <int> <lgl>  
-#> 1 Aleksan~   2019 TRUE     0.0589  0.0591  0.0741  0.0423  0.0216     27 FALSE  
-#> 2 Carlos ~   2019 TRUE     0.0610  0.0607  0.0645  0.0259  0.0196     31 FALSE  
-#> 3 Gonzalo~   2019 TRUE     0.0590  0.0572  0      -0.0357 -0.0162     24 FALSE  
-#> 4 Hakim Z~   2018 TRUE     0.0616  0.0618  0.143   0.112   0.0295     42 FALSE  
-#> 5 Hakim Z~   2019 TRUE     0.0611  0.0617  0.08    0.0426  0.0376     25 FALSE  
-#> 6 Miguel ~   2018 TRUE     0.0593  0.0586  0.0667  0.0226  0.00213    30 FALSE  
-#> 7 Oussama~   2020 TRUE     0.0616  0.0605  0.0526  0.0204 -0.00320    38 FALSE  
-#> 8 Sebasti~   2018 TRUE     0.0580  0.0566  0.0278 -0.0138  0.0182     36 FALSE  
-#> 9 Steven ~   2020 TRUE     0.0616  0.0618  0.103   0.0682  0.00110    29 FALSE  
-#> # ... with 6 more variables: rb_post_xg_b <dbl>, gen_post_xg_b <dbl>,
-#> #   goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>, and abbreviated
-#> #   variable names 1: first_half_season_a, 2: rb_post_xg_a, 3: gen_post_xg_a,
-#> #   4: goal_pct_a, 5: first_half_season_b
+#> # A tibble: 75 x 16
+#>    player Season first~1 rb_po~2 gen_p~3 goal_~4    gax_a    ega_a   n_a first~5
+#>    <fct>   <int> <lgl>     <dbl>   <dbl>   <dbl>    <dbl>    <dbl> <int> <lgl>  
+#>  1 Aleks~   2018 TRUE      0.143   0.140  0.192   0.0882   0.0334     26 FALSE  
+#>  2 Aleks~   2019 TRUE      0.134   0.126  0.0938  0.0423   0.0199     32 FALSE  
+#>  3 Alexa~   2019 TRUE      0.153   0.154  0.16    0.0592   0.0500     25 FALSE  
+#>  4 Andre~   2018 TRUE      0.160   0.169  0.167   0.0104   0.0360     24 FALSE  
+#>  5 Arthu~   2018 TRUE      0.140   0.140  0.16   -0.00140  0.0335     25 FALSE  
+#>  6 Bradl~   2018 TRUE      0.137   0.136  0.269   0.0913   0.0676     26 FALSE  
+#>  7 Brani~   2020 TRUE      0.135   0.130  0.133  -0.0304  -0.00890    30 FALSE  
+#>  8 Bryan~   2018 TRUE      0.137   0.126  0.08   -0.0276  -0.00542    25 FALSE  
+#>  9 Carlo~   2018 TRUE      0.142   0.134  0.111   0.0491   0.0122     27 FALSE  
+#> 10 Carlo~   2019 TRUE      0.138   0.133  0.311   0.157    0.0655     45 FALSE  
+#> # ... with 65 more rows, 6 more variables: rb_post_xg_b <dbl>,
+#> #   gen_post_xg_b <dbl>, goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>,
+#> #   and abbreviated variable names 1: first_half_season_a, 2: rb_post_xg_a,
+#> #   3: gen_post_xg_a, 4: goal_pct_a, 5: first_half_season_b
 ```
 
 ## Figure 6

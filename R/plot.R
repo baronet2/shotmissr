@@ -20,3 +20,17 @@ plot_goalposts <- function(...)
     ...
   )
 }
+
+#' Plot grass
+#'
+#' Add horizontal line segment at y=0 to ggplot.
+#'
+#' @param ... Arguments passed to geom_hline
+#'
+#' @return ggplot2::geom_hline at y=0
+#'
+#' @export
+plot_grass <- function(...)
+{
+  ggplot2::geom_hline(yintercept = 0, ...)
+}

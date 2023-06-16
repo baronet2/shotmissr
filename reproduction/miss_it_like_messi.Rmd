@@ -41,6 +41,7 @@ statsbomb_shots_processed |>
     y = z_end,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 8) +
@@ -65,6 +66,7 @@ statsbomb_shots_processed |>
     y = z_end,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 3) +
@@ -85,6 +87,7 @@ statsbomb_shots_processed |>
     y = z_end_proj,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 3) +
@@ -109,6 +112,7 @@ shots |>
     show.legend = FALSE
   ) +
   plot_goalposts(color = "red", cex = 2) +
+  plot_grass(color = "darkgreen", cex = 2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 3) +
@@ -131,6 +135,7 @@ statsbomb_shots |>
     y = z_end,
     color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
   ggplot2::ylim(0, 8) +
@@ -196,6 +201,7 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 4.5) +
@@ -231,6 +237,7 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 4.5) +
@@ -259,6 +266,7 @@ mixture_model_components[selected_components,] |>
   ggplot2::geom_point(colour = "blue") +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
   ggplot2::ylim(0, 3) +
