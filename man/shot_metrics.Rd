@@ -5,7 +5,7 @@
 \alias{shot_metrics}
 \title{Shot-level metrics}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 24960 rows and 24 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 21010 rows and 24 columns.
 }
 \usage{
 shot_metrics

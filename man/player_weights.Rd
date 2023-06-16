@@ -5,7 +5,7 @@
 \alias{player_weights}
 \title{Player mixture model weights fit via Stan}
 \format{
-An object of class \code{matrix} (inherits from \code{array}) with 2914 rows and 8 columns.
+An object of class \code{matrix} (inherits from \code{array}) with 2610 rows and 8 columns.
 }
 \usage{
 player_weights
