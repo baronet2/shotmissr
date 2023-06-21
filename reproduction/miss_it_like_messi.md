@@ -291,6 +291,23 @@ Hunter_et_al_2018_shots |>
 ``` r
 mixture_model_components <- get_mixture_model_components()
 
+yy = seq(34, 46, length.out = 100)
+zz = seq(0, 4, length.out = 100)
+yz = expand.grid(y = yy, z = zz)
+
+# Get probability density for each shot/component
+pdfs <- get_shot_probability_densities(
+  mixture_model_components[selected_components,],
+  as.matrix(yz)
+)
+
+# Normalize each column to put components on equal footing
+pdfs <- apply(pdfs, 2, function(x) {x / max(x)})
+
+mixture_model_pdfs <- yz |>
+  dplyr::mutate(pdf = apply(pdfs, 1, max)) |>
+  tibble::tibble()
+
 mixture_model_components[selected_components,] |>
   dplyr::mutate(
     y = purrr::map_dbl(mean, ~.[[1]]),
@@ -300,8 +317,11 @@ mixture_model_components[selected_components,] |>
   ) |>
   dplyr::filter(weight > 0.012) |>
   dplyr::rename(Weight = weight) |>
-  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda)) +
-  ggplot2::geom_point(colour = "blue") +
+  ggplot2::ggplot() +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda),
+    colour = "darkblue"
+  ) +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
@@ -311,7 +331,19 @@ mixture_model_components[selected_components,] |>
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
-  )
+  ) +
+  # Add contour plot of Gaussians
+  ggplot2::geom_contour_filled(
+    data = mixture_model_pdfs,
+    mapping = ggplot2::aes(x = y, y = z, z = pdf),
+    bins = 9,
+    alpha = 0.3,
+    breaks = seq(0.7, 1, by = 0.1),
+    show.legend = FALSE
+  ) +
+  # Make Gaussian contours coloured blue
+  ggplot2::scale_fill_brewer()
+#> Warning: Removed 3850 rows containing non-finite values (stat_contour_filled).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
@@ -377,7 +409,6 @@ stability_data |>
   dplyr::filter(n_a + n_b >= 30) |>
   # Get metrics only
   dplyr::select(
-    dplyr::starts_with("goal_pct"),
     dplyr::starts_with("gax"),
     dplyr::starts_with("ega"),
     dplyr::matches("_xg")
@@ -394,30 +425,33 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
-| goal_pct_a    |  0.0997650 | 0.0816178 | 0.0989308 |    0.0464313 |     0.0480479 |
-| gax_a         |  0.1056930 | 0.0925974 | 0.0841096 |    0.0421375 |     0.0455160 |
-| ega_a         |  0.0870435 | 0.0655735 | 0.0874220 |   -0.0586405 |    -0.0843918 |
-| rb_post_xg_a  |  0.0966451 | 0.0866264 | 0.0034200 |    0.0265307 |     0.0928450 |
-| gen_post_xg_a |  0.1484362 | 0.1314014 | 0.1204237 |    0.0630395 |     0.1057084 |
+|               |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|----------:|----------:|-------------:|--------------:|
+| gax_a         | 0.0925974 | 0.0841096 |    0.0421375 |     0.0455160 |
+| ega_a         | 0.0655735 | 0.0874220 |   -0.0586405 |    -0.0843918 |
+| rb_post_xg_a  | 0.0866264 | 0.0034200 |    0.0265307 |     0.0928450 |
+| gen_post_xg_a | 0.1314014 | 0.1204237 |    0.0630395 |     0.1057084 |
 
 ``` r
 stability_data |>
-  dplyr::filter(n_a + n_b >= 50)
-#> # A tibble: 6 x 16
-#>   player  Season first~1 rb_po~2 gen_p~3 goal_~4    gax_a    ega_a   n_a first~5
-#>   <fct>    <int> <lgl>     <dbl>   <dbl>   <dbl>    <dbl>    <dbl> <int> <lgl>  
-#> 1 Aleksa~   2019 TRUE     0.0781  0.0788  0.0833  0.0516   0.0202     24 FALSE  
-#> 2 Hakim ~   2018 TRUE     0.0794  0.0805  0.167   0.138    0.0380     36 FALSE  
-#> 3 Miguel~   2018 TRUE     0.0806  0.0807  0.0357 -0.00796 -0.00909    28 FALSE  
-#> 4 Oussam~   2020 TRUE     0.0760  0.0745  0.0769  0.0457  -0.00103    26 FALSE  
-#> 5 Sebast~   2018 TRUE     0.0796  0.0801  0.04    0.00286  0.0414     25 FALSE  
-#> 6 Steven~   2020 TRUE     0.0750  0.0690  0.115   0.0819   0.0196     26 FALSE  
-#> # ... with 6 more variables: rb_post_xg_b <dbl>, gen_post_xg_b <dbl>,
-#> #   goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>, and abbreviated
-#> #   variable names 1: first_half_season_a, 2: rb_post_xg_a, 3: gen_post_xg_a,
-#> #   4: goal_pct_a, 5: first_half_season_b
+  dplyr::filter(n_a + n_b >= 5)
+#> # A tibble: 998 x 16
+#>    player  Season first~1 rb_po~2 gen_p~3 goal_~4   gax_a    ega_a   n_a first~5
+#>    <fct>    <int> <lgl>     <dbl>   <dbl>   <dbl>   <dbl>    <dbl> <int> <lgl>  
+#>  1 Aaron ~   2019 TRUE     0.0783  0.0811  0      -0.0400  0.0739      7 FALSE  
+#>  2 Aaron ~   2020 TRUE     0.0795  0.0869  0      -0.0381 -0.0181      7 FALSE  
+#>  3 Abdena~   2018 TRUE     0.0790  0.0831  0.0667  0.0297  0.0536     15 FALSE  
+#>  4 Abdena~   2020 TRUE     0.0792  0.0916  0      -0.0195 -0.00149     5 FALSE  
+#>  5 Abdoul~   2019 TRUE     0.0802  0.0911  0.2     0.173   0.0733      5 FALSE  
+#>  6 Abdoul~   2019 TRUE     0.0733  0.0677  0      -0.0318  0.0228     11 FALSE  
+#>  7 Abdoul~   2020 TRUE     0.0775  0.0776  0.111   0.0806  0.0155     18 FALSE  
+#>  8 Abouba~   2018 TRUE     0.0787  0.0818  0      -0.0458 -0.0286      6 FALSE  
+#>  9 Adam B~   2020 TRUE     0.0777  0.0719  0      -0.0344  0.0221      6 FALSE  
+#> 10 Adam M~   2019 TRUE     0.0776  0.0792  0      -0.0303 -0.0132      7 FALSE  
+#> # ... with 988 more rows, 6 more variables: rb_post_xg_b <dbl>,
+#> #   gen_post_xg_b <dbl>, goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>,
+#> #   and abbreviated variable names 1: first_half_season_a, 2: rb_post_xg_a,
+#> #   3: gen_post_xg_a, 4: goal_pct_a, 5: first_half_season_b
 ```
 
 ## Figure 6
@@ -436,10 +470,26 @@ expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_x
   dplyr::mutate(
     stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
   ) |>
-  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
+  dplyr::mutate(
+    metric = dplyr::case_when(
+      metric == "gax" ~ "GAX",
+      metric == "ega" ~ "EGA",
+      metric == "rb_post_xg" ~ "RBPostXg",
+      metric == "gen_post_xg" ~ "GenPostXg"
+    )
+  ) |>
+  dplyr::rename(
+    Metric = metric
+  ) |>
+  dplyr::filter(threshold <= 50) |>
+  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = Metric)) +
   ggplot2::geom_line() +
-  ggplot2::theme_light()
-#> Warning: Removed 8 row(s) containing missing values (geom_path).
+  ggplot2::theme_light() +
+  ggplot2::labs(
+    x = "Minimum Sample Size",
+    y = "Correlation"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_6-1.png)<!-- -->

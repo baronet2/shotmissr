@@ -253,6 +253,23 @@ Hunter_et_al_2018_shots |>
 ```{r figure_3}
 mixture_model_components <- get_mixture_model_components()
 
+yy = seq(34, 46, length.out = 100)
+zz = seq(0, 4, length.out = 100)
+yz = expand.grid(y = yy, z = zz)
+
+# Get probability density for each shot/component
+pdfs <- get_shot_probability_densities(
+  mixture_model_components[selected_components,],
+  as.matrix(yz)
+)
+
+# Normalize each column to put components on equal footing
+pdfs <- apply(pdfs, 2, function(x) {x / max(x)})
+
+mixture_model_pdfs <- yz |>
+  dplyr::mutate(pdf = apply(pdfs, 1, max)) |>
+  tibble::tibble()
+
 mixture_model_components[selected_components,] |>
   dplyr::mutate(
     y = purrr::map_dbl(mean, ~.[[1]]),
@@ -262,8 +279,11 @@ mixture_model_components[selected_components,] |>
   ) |>
   dplyr::filter(weight > 0.012) |>
   dplyr::rename(Weight = weight) |>
-  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda)) +
-  ggplot2::geom_point(colour = "blue") +
+  ggplot2::ggplot() +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda),
+    colour = "darkblue"
+  ) +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
   plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
@@ -273,7 +293,18 @@ mixture_model_components[selected_components,] |>
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
-  )
+  ) +
+  # Add contour plot of Gaussians
+  ggplot2::geom_contour_filled(
+    data = mixture_model_pdfs,
+    mapping = ggplot2::aes(x = y, y = z, z = pdf),
+    bins = 9,
+    alpha = 0.3,
+    breaks = seq(0.7, 1, by = 0.1),
+    show.legend = FALSE
+  ) +
+  # Make Gaussian contours coloured blue
+  ggplot2::scale_fill_brewer()
 ```
 
 ## Calculate player metrics
@@ -329,7 +360,6 @@ stability_data |>
   dplyr::filter(n_a + n_b >= 30) |>
   # Get metrics only
   dplyr::select(
-    dplyr::starts_with("goal_pct"),
     dplyr::starts_with("gax"),
     dplyr::starts_with("ega"),
     dplyr::matches("_xg")
@@ -348,7 +378,7 @@ stability_data |>
 
 ```{r}
 stability_data |>
-  dplyr::filter(n_a + n_b >= 50)
+  dplyr::filter(n_a + n_b >= 5)
 ```
 
 
@@ -368,9 +398,26 @@ expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_x
   dplyr::mutate(
     stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
   ) |>
-  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
+  dplyr::mutate(
+    metric = dplyr::case_when(
+      metric == "gax" ~ "GAX",
+      metric == "ega" ~ "EGA",
+      metric == "rb_post_xg" ~ "RBPostXg",
+      metric == "gen_post_xg" ~ "GenPostXg"
+    )
+  ) |>
+  dplyr::rename(
+    Metric = metric
+  ) |>
+  dplyr::filter(threshold <= 50) |>
+  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = Metric)) +
   ggplot2::geom_line() +
-  ggplot2::theme_light()
+  ggplot2::theme_light() +
+  ggplot2::labs(
+    x = "Minimum Sample Size",
+    y = "Correlation"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 # TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
 
 ```
