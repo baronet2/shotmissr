@@ -432,58 +432,65 @@ stability_data |>
 | rb_post_xg_a  | 0.0866264 | 0.0034200 |    0.0265307 |     0.0928450 |
 | gen_post_xg_a | 0.1314014 | 0.1204237 |    0.0630395 |     0.1057084 |
 
-``` r
-stability_data |>
-  dplyr::filter(n_a + n_b >= 5)
-#> # A tibble: 998 x 16
-#>    player  Season first~1 rb_po~2 gen_p~3 goal_~4   gax_a    ega_a   n_a first~5
-#>    <fct>    <int> <lgl>     <dbl>   <dbl>   <dbl>   <dbl>    <dbl> <int> <lgl>  
-#>  1 Aaron ~   2019 TRUE     0.0783  0.0811  0      -0.0400  0.0739      7 FALSE  
-#>  2 Aaron ~   2020 TRUE     0.0795  0.0869  0      -0.0381 -0.0181      7 FALSE  
-#>  3 Abdena~   2018 TRUE     0.0790  0.0831  0.0667  0.0297  0.0536     15 FALSE  
-#>  4 Abdena~   2020 TRUE     0.0792  0.0916  0      -0.0195 -0.00149     5 FALSE  
-#>  5 Abdoul~   2019 TRUE     0.0802  0.0911  0.2     0.173   0.0733      5 FALSE  
-#>  6 Abdoul~   2019 TRUE     0.0733  0.0677  0      -0.0318  0.0228     11 FALSE  
-#>  7 Abdoul~   2020 TRUE     0.0775  0.0776  0.111   0.0806  0.0155     18 FALSE  
-#>  8 Abouba~   2018 TRUE     0.0787  0.0818  0      -0.0458 -0.0286      6 FALSE  
-#>  9 Adam B~   2020 TRUE     0.0777  0.0719  0      -0.0344  0.0221      6 FALSE  
-#> 10 Adam M~   2019 TRUE     0.0776  0.0792  0      -0.0303 -0.0132      7 FALSE  
-#> # ... with 988 more rows, 6 more variables: rb_post_xg_b <dbl>,
-#> #   gen_post_xg_b <dbl>, goal_pct_b <dbl>, gax_b <dbl>, ega_b <dbl>, n_b <int>,
-#> #   and abbreviated variable names 1: first_half_season_a, 2: rb_post_xg_a,
-#> #   3: gen_post_xg_a, 4: goal_pct_a, 5: first_half_season_b
-```
-
 ## Figure 6
 
 ``` r
-get_stability_above_threshold <- function(metric, n) {
-  filtered_data <- stability_data |>
-    dplyr::filter(n_a + n_b >= n)
-  
-  # TODO bootstrap rows here to get estimate of lower and upper bound
-  
-  cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
-}
+set.seed(42)
 
-expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_xg")) |>
+metric_names = c("gax", "ega", "rb_post_xg", "gen_post_xg")
+
+n_bootstraps <- 50
+
+bootstrapped_correlations <- suppressWarnings(
+  data.frame(threshold = 6:50) |>
   dplyr::mutate(
-    stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
+    filtered_data = purrr::map(threshold, ~ stability_data |>
+      dplyr::filter(n_a + n_b >= .x)),
+    cors = purrr::map(
+      filtered_data,
+      ~ replicate(
+        n = n_bootstraps,
+        expr = .x |>
+          dplyr::sample_frac(size = 1, replace = TRUE) |>
+          dplyr::select(dplyr::matches(paste0(metric_names, collapse = "|"))) |>
+          cor()
+      )
+    ),
+    q25 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.25, na.rm = TRUE))
+    ),
+    q50 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.5, na.rm = TRUE))
+    ),
+    q75 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.75, na.rm = TRUE))
+    )
   ) |>
+  dplyr::select(threshold, q25, q50, q75) |>
+  dplyr::mutate(metric = list(metric_names)) |>
+  tidyr::unnest(metric) |>
   dplyr::mutate(
-    metric = dplyr::case_when(
+    q25 = purrr::map2_dbl(q25, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q50 = purrr::map2_dbl(q50, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q75 = purrr::map2_dbl(q75, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]])
+  )
+) 
+
+bootstrapped_correlations |>
+  dplyr::mutate(
+    Metric = dplyr::case_when(
       metric == "gax" ~ "GAX",
       metric == "ega" ~ "EGA",
       metric == "rb_post_xg" ~ "RBPostXg",
       metric == "gen_post_xg" ~ "GenPostXg"
     )
   ) |>
-  dplyr::rename(
-    Metric = metric
-  ) |>
-  dplyr::filter(threshold <= 50) |>
-  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = Metric)) +
-  ggplot2::geom_line() +
+  ggplot2::ggplot(ggplot2::aes(x = threshold)) +
+  ggplot2::geom_line(ggplot2::aes(y = q50, colour = Metric)) +
+  ggplot2::geom_ribbon(ggplot2::aes(ymin = q25, ymax = q75, fill = Metric), alpha = 0.1) +
   ggplot2::theme_light() +
   ggplot2::labs(
     x = "Minimum Sample Size",
@@ -493,7 +500,3 @@ expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_x
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_6-1.png)<!-- -->
-
-``` r
-# TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
-```

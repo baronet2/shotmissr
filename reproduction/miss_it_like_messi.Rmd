@@ -376,49 +376,69 @@ stability_data |>
   knitr::kable()
 ```
 
-```{r}
-stability_data |>
-  dplyr::filter(n_a + n_b >= 5)
-```
-
-
 ## Figure 6
 
 ```{r figure_6}
-get_stability_above_threshold <- function(metric, n) {
-  filtered_data <- stability_data |>
-    dplyr::filter(n_a + n_b >= n)
-  
-  # TODO bootstrap rows here to get estimate of lower and upper bound
-  
-  cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
-}
+set.seed(42)
 
-expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_xg")) |>
+metric_names = c("gax", "ega", "rb_post_xg", "gen_post_xg")
+
+n_bootstraps <- 50
+
+bootstrapped_correlations <- suppressWarnings(
+  data.frame(threshold = 6:50) |>
   dplyr::mutate(
-    stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
+    filtered_data = purrr::map(threshold, ~ stability_data |>
+      dplyr::filter(n_a + n_b >= .x)),
+    cors = purrr::map(
+      filtered_data,
+      ~ replicate(
+        n = n_bootstraps,
+        expr = .x |>
+          dplyr::sample_frac(size = 1, replace = TRUE) |>
+          dplyr::select(dplyr::matches(paste0(metric_names, collapse = "|"))) |>
+          cor()
+      )
+    ),
+    q25 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.25, na.rm = TRUE))
+    ),
+    q50 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.5, na.rm = TRUE))
+    ),
+    q75 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.75, na.rm = TRUE))
+    )
   ) |>
+  dplyr::select(threshold, q25, q50, q75) |>
+  dplyr::mutate(metric = list(metric_names)) |>
+  tidyr::unnest(metric) |>
   dplyr::mutate(
-    metric = dplyr::case_when(
+    q25 = purrr::map2_dbl(q25, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q50 = purrr::map2_dbl(q50, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q75 = purrr::map2_dbl(q75, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]])
+  )
+) 
+
+bootstrapped_correlations |>
+  dplyr::mutate(
+    Metric = dplyr::case_when(
       metric == "gax" ~ "GAX",
       metric == "ega" ~ "EGA",
       metric == "rb_post_xg" ~ "RBPostXg",
       metric == "gen_post_xg" ~ "GenPostXg"
     )
   ) |>
-  dplyr::rename(
-    Metric = metric
-  ) |>
-  dplyr::filter(threshold <= 50) |>
-  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = Metric)) +
-  ggplot2::geom_line() +
+  ggplot2::ggplot(ggplot2::aes(x = threshold)) +
+  ggplot2::geom_line(ggplot2::aes(y = q50, colour = Metric)) +
+  ggplot2::geom_ribbon(ggplot2::aes(ymin = q25, ymax = q75, fill = Metric), alpha = 0.1) +
   ggplot2::theme_light() +
   ggplot2::labs(
     x = "Minimum Sample Size",
     y = "Correlation"
   ) +
   ggplot2::theme(legend.position = c(0.1, 0.85))
-# TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
-
 ```
-
