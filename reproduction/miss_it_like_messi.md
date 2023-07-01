@@ -348,6 +348,46 @@ mixture_model_components[selected_components,] |>
 
 ![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
 
+## Figure 4
+
+``` r
+shot_metrics |>
+  dplyr::group_by(Season, player, first_half_season, group_id) |>
+  dplyr::tally() |>
+  dplyr::arrange(group_id) |>
+  cbind(data.frame(player_weights)) |>
+  dplyr::filter(first_half_season) |>
+  dplyr::arrange(-n) |>
+  head(4) |>
+  dplyr::mutate(label = paste0(Season, " ", player)) |>
+  tidyr::pivot_longer(
+    X1:X8,
+    names_to = "Component",
+    values_to = "Weight",
+    names_prefix = "X"
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::select(label, Component, Weight) |>
+  rbind(
+    data.frame(
+      label = "Global Weights",
+      Component = 1:8,
+      Weight = global_weights
+    )
+  ) |>
+  dplyr::mutate(label = forcats::fct_rev(label)) |>
+  ggplot2::ggplot(ggplot2::aes(x = Component, y = Weight, fill = label, group = label)) +
+  ggplot2::geom_col(position = "dodge") +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = c(0.7, 0.8),
+    legend.title = ggplot2::element_blank()
+  ) +
+  ggplot2::scale_fill_viridis_d()
+```
+
+![](miss_it_like_messi_files/figure-gfm/figure_4-1.png)<!-- -->
+
 ## Calculate player metrics
 
 ``` r
