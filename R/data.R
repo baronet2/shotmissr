@@ -171,9 +171,9 @@ filter_shooting_skill_data <- function(data, max_xg = 0.1, min_distance = 15)
       !is.na(y_end_proj),
       !is.na(z_end_proj),
       SBPreXg < max_xg,
-      distance >= min_distance,
-      grepl("Foot", body_part),
-      grepl("Open Play", type)
+      distance >= min_distance
+      # grepl("Foot", body_part),
+      # grepl("Open Play", type)
     )
 }
 
