@@ -17,21 +17,21 @@ statsbomb_shots_processed |>
 
 | League | Season | num_shots |
 |:-------|-------:|----------:|
-| ARG    |   2019 |      2075 |
-| FR2    |   2018 |      2598 |
-| FR2    |   2019 |      1995 |
-| FR2    |   2020 |      2489 |
-| GR2    |   2018 |      2273 |
-| GR2    |   2019 |      2382 |
-| GR2    |   2020 |      2140 |
-| MLS    |   2018 |      3261 |
-| MLS    |   2019 |      3555 |
-| MLS    |   2020 |      2391 |
-| NED    |   2018 |      2515 |
-| NED    |   2019 |      1934 |
-| NED    |   2020 |      2360 |
-| USL    |   2019 |      1523 |
-| USL    |   2020 |      2119 |
+| ARG    |   2019 |      3409 |
+| FR2    |   2018 |      4438 |
+| FR2    |   2019 |      3290 |
+| FR2    |   2020 |      4300 |
+| GR2    |   2018 |      4086 |
+| GR2    |   2019 |      4099 |
+| GR2    |   2020 |      3881 |
+| MLS    |   2018 |      5857 |
+| MLS    |   2019 |      6220 |
+| MLS    |   2020 |      4294 |
+| NED    |   2018 |      4571 |
+| NED    |   2019 |      3384 |
+| NED    |   2020 |      4198 |
+| USL    |   2019 |      2677 |
+| USL    |   2020 |      3823 |
 
 ## Figure 1
 
@@ -82,7 +82,7 @@ statsbomb_shots_processed |>
     y = "Shot End z-coordinate"
   ) +
   ggplot2::theme(legend.position = c(0.1, 0.85))
-#> Warning: Removed 2 rows containing missing values (geom_point).
+#> Warning: Removed 13 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-1.png)<!-- -->
@@ -109,7 +109,7 @@ statsbomb_shots_processed |>
     y = "Shot End z-coordinate"
   ) +
   ggplot2::theme(legend.position = c(0.1, 0.85))
-#> Warning: Removed 1 rows containing missing values (geom_point).
+#> Warning: Removed 2 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-2.png)<!-- -->
@@ -361,7 +361,7 @@ shot_metrics |>
   head(4) |>
   dplyr::mutate(label = paste0(Season, " ", player)) |>
   tidyr::pivot_longer(
-    X1:X8,
+    dplyr::starts_with("X"),
     names_to = "Component",
     values_to = "Weight",
     names_prefix = "X"
@@ -371,7 +371,7 @@ shot_metrics |>
   rbind(
     data.frame(
       label = "Global Weights",
-      Component = 1:8,
+      Component = 1:length(selected_components),
       Weight = global_weights
     )
   ) |>
@@ -417,7 +417,6 @@ stability_data <- half_season_stats |>
 stability_data |>
   # Get metrics only
   dplyr::select(
-    dplyr::starts_with("goal_pct"),
     dplyr::starts_with("gax"),
     dplyr::starts_with("ega"),
     dplyr::matches("_xg")
@@ -434,13 +433,12 @@ stability_data |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |     gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|----------:|-----------:|-------------:|--------------:|
-| goal_pct_a    |  0.0193315 | 0.0176607 | -0.0025766 |   -0.0132630 |    -0.0020086 |
-| gax_a         |  0.0095136 | 0.0121390 | -0.0150594 |   -0.0131651 |    -0.0003247 |
-| ega_a         |  0.0075435 | 0.0027666 | -0.0088125 |   -0.0382934 |    -0.0335995 |
-| rb_post_xg_a  |  0.0268301 | 0.0340300 | -0.0014224 |    0.0035993 |     0.0380098 |
-| gen_post_xg_a |  0.0369969 | 0.0392833 | -0.0284008 |    0.0051541 |     0.0602029 |
+|               |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|----------:|----------:|-------------:|--------------:|
+| gax_a         | 0.0353784 | 0.0249364 |    0.0445117 |     0.0516714 |
+| ega_a         | 0.0052795 | 0.0359962 |    0.0254674 |     0.0236991 |
+| rb_post_xg_a  | 0.0394716 | 0.0330059 |    0.1140175 |     0.1161350 |
+| gen_post_xg_a | 0.0278304 | 0.0364614 |    0.1229986 |     0.1499299 |
 
 ## Table 4
 
@@ -467,10 +465,10 @@ stability_data |>
 
 |               |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
 |:--------------|----------:|----------:|-------------:|--------------:|
-| gax_a         | 0.0925974 | 0.0841096 |    0.0421375 |     0.0455160 |
-| ega_a         | 0.0655735 | 0.0874220 |   -0.0586405 |    -0.0843918 |
-| rb_post_xg_a  | 0.0866264 | 0.0034200 |    0.0265307 |     0.0928450 |
-| gen_post_xg_a | 0.1314014 | 0.1204237 |    0.0630395 |     0.1057084 |
+| gax_a         | 0.0514288 | 0.0195463 |   -0.0114733 |    -0.0247884 |
+| ega_a         | 0.0365588 | 0.0183749 |   -0.0494727 |    -0.0993044 |
+| rb_post_xg_a  | 0.1194221 | 0.0865154 |    0.0925798 |     0.1199009 |
+| gen_post_xg_a | 0.1256566 | 0.1130035 |    0.1105484 |     0.1471964 |
 
 ## Figure 6
 

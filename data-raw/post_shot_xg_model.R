@@ -26,7 +26,15 @@ stripGlmLR = function(cm) {
   cm
 }
 
-data <- statsbomb_shots_processed %>%
+data <- statsbomb_shots |>
+  dplyr::mutate(
+    do_adjust_y = Season <= 2018,
+    do_project_saved = !do_adjust_y
+  ) %>%
+  adjust_shot_end_coords() %>%
+  project_shot_end_coords() %>%
+  dplyr::select(-do_adjust_y, -do_project_saved) %>%
+  prepare_shooting_skill_data(max_xg = 1, min_distance = 0) |>
   filter_post_xg_shots() %>%
   dplyr::mutate(Goal = outcome == "Goal")
 

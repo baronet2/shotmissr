@@ -4,10 +4,14 @@
 \alias{filter_shooting_skill_data}
 \title{Filter shooting skill data}
 \usage{
-filter_shooting_skill_data(data)
+filter_shooting_skill_data(data, max_xg = 0.1, min_distance = 15)
 }
 \arguments{
 \item{data}{A data frame with shot details}
+
+\item{max_xg}{A number indicating the maximum pre-shot expected goals to include}
+
+\item{min_distance}{A number indicating the minimum shot distance to include}
 }
 \value{
 The same data frame with some rows removed

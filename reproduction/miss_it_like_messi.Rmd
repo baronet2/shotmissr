@@ -320,7 +320,7 @@ shot_metrics |>
   head(4) |>
   dplyr::mutate(label = paste0(Season, " ", player)) |>
   tidyr::pivot_longer(
-    X1:X8,
+    dplyr::starts_with("X"),
     names_to = "Component",
     values_to = "Weight",
     names_prefix = "X"
@@ -330,7 +330,7 @@ shot_metrics |>
   rbind(
     data.frame(
       label = "Global Weights",
-      Component = 1:8,
+      Component = 1:length(selected_components),
       Weight = global_weights
     )
   ) |>
@@ -374,7 +374,6 @@ stability_data <- half_season_stats |>
 stability_data |>
   # Get metrics only
   dplyr::select(
-    dplyr::starts_with("goal_pct"),
     dplyr::starts_with("gax"),
     dplyr::starts_with("ega"),
     dplyr::matches("_xg")

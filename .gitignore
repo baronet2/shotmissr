@@ -9,3 +9,4 @@ data/Hunter_et_al_2018_shots.rda
 data/player_weights.rda
 data/shot_metrics.rda
 sensitivity_analysis/*.Rds
+reproduction/*_cache
