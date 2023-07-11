@@ -1,5 +1,5 @@
 devtools::load_all()
-setwd("sensitivity_analysis")
+# setwd("sensitivity_analysis")
 
 mixture_model_components <- get_mixture_model_components()
 
@@ -95,7 +95,7 @@ results <- expand.grid(
 correlations <- results |>
   dplyr::mutate(metric = list(c("gax", "ega", "rb_post_xg", "gen_post_xg"))) |>
   tidyr::unnest(metric) |>
-  dplyr::mutate(threshold = list(6:60)) |>
+  dplyr::mutate(threshold = list(6:40)) |>
   tidyr::unnest(threshold) |>
   dplyr::mutate(
     filtered_data = purrr::map2(stability_data, threshold, ~ dplyr::filter(.x, n_a + n_b >= .y)),
@@ -127,7 +127,8 @@ correlations |>
       metric == "ega" ~ "EGA",
       metric == "rb_post_xg" ~ "RBPostXg",
       metric == "gen_post_xg" ~ "GenPostXg"
-    )
+    ),
+    xg_limit = forcats::fct_rev(factor(xg_limit))
   ) |>
   dplyr::rename(
     `Minimum Shot Distance` = distance_limit,
