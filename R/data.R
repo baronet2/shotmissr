@@ -191,12 +191,11 @@ flip_left_foot_shot_end_coords <- function(data)
 {
   data %>%
     dplyr::mutate(
-      # y_end_proj = ifelse(
-      #   body_part == "Left Foot",
-      #   2 * y_center_line() - y_end_proj,
-      #   y_end_proj
-      # )
-      y_end_proj = y_end_proj
+      y_end_proj = ifelse(
+        body_part == "Left Foot",
+        2 * y_center_line() - y_end_proj,
+        y_end_proj
+      )
     )
 }
 

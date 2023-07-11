@@ -26,6 +26,6 @@ statsbomb_shots_processed <- statsbomb_shots |>
   adjust_shot_end_coords() %>%
   project_shot_end_coords() %>%
   dplyr::select(-do_adjust_y, -do_project_saved) %>%
-  prepare_shooting_skill_data(max_xg = 1, min_distance = 0)
+  prepare_shooting_skill_data(max_xg = 1, min_distance = 6)
 
 usethis::use_data(statsbomb_shots_processed, overwrite = TRUE)
