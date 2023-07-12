@@ -11,7 +11,6 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  cache = TRUE,
   fig.width = 8,
   fig.height = 6
 )
@@ -23,6 +22,8 @@ devtools::load_all()
 
 ## Table 1
 ```{r table_1}
+nrow(statsbomb_shots_processed)
+
 statsbomb_shots_processed |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
@@ -120,6 +121,36 @@ shots |>
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
   )
+
+
+print("AUROC of StatsBomb PostXg:")
+pROC::auc(
+  pROC::roc(
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(outcome) == "Goal",
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(SBPostXg)
+  )
+)
+
+print("AUROC of Coordinates-based PostXg:")
+pROC::auc(
+  pROC::roc(
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(outcome) == "Goal",
+    predict_post_xg(
+      statsbomb_shots_processed |>
+        filter_post_xg_shots() |>
+        dplyr::pull(y_end_proj),
+      statsbomb_shots_processed |>
+        filter_post_xg_shots() |>
+        dplyr::pull(z_end_proj)
+    )
+  )
+)
 ```
 
 ## Figure 7
@@ -339,7 +370,7 @@ shot_metrics |>
   ggplot2::geom_col(position = "dodge") +
   ggplot2::theme_light() +
   ggplot2::theme(
-    legend.position = c(0.7, 0.8),
+    legend.position = c(0.2, 0.85),
     legend.title = ggplot2::element_blank()
   ) +
   ggplot2::scale_fill_viridis_d()
@@ -387,6 +418,7 @@ stability_data |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix() |>
+  round(3) |>
   knitr::kable()
 ```
 
@@ -394,7 +426,7 @@ stability_data |>
 
 ```{r table_4}
 stability_data |>
-  dplyr::filter(n_a + n_b >= 30) |>
+  dplyr::filter(n_a + n_b >= 40) |>
   # Get metrics only
   dplyr::select(
     dplyr::starts_with("gax"),
@@ -410,6 +442,7 @@ stability_data |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix() |>
+  round(3) |>
   knitr::kable()
 ```
 

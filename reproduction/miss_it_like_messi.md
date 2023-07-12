@@ -9,6 +9,9 @@ devtools::load_all()
 ## Table 1
 
 ``` r
+nrow(statsbomb_shots_processed)
+#> [1] 77315
+
 statsbomb_shots_processed |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
@@ -140,6 +143,47 @@ shots |>
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_5-1.png)<!-- -->
+
+``` r
+
+
+print("AUROC of StatsBomb PostXg:")
+#> [1] "AUROC of StatsBomb PostXg:"
+pROC::auc(
+  pROC::roc(
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(outcome) == "Goal",
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(SBPostXg)
+  )
+)
+#> Setting levels: control = FALSE, case = TRUE
+#> Setting direction: controls < cases
+#> Area under the curve: 0.8601
+
+print("AUROC of Coordinates-based PostXg:")
+#> [1] "AUROC of Coordinates-based PostXg:"
+pROC::auc(
+  pROC::roc(
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(outcome) == "Goal",
+    predict_post_xg(
+      statsbomb_shots_processed |>
+        filter_post_xg_shots() |>
+        dplyr::pull(y_end_proj),
+      statsbomb_shots_processed |>
+        filter_post_xg_shots() |>
+        dplyr::pull(z_end_proj)
+    )
+  )
+)
+#> Setting levels: control = FALSE, case = TRUE
+#> Setting direction: controls < cases
+#> Area under the curve: 0.7035
+```
 
 ## Figure 7
 
@@ -380,7 +424,7 @@ shot_metrics |>
   ggplot2::geom_col(position = "dodge") +
   ggplot2::theme_light() +
   ggplot2::theme(
-    legend.position = c(0.7, 0.8),
+    legend.position = c(0.2, 0.85),
     legend.title = ggplot2::element_blank()
   ) +
   ggplot2::scale_fill_viridis_d()
@@ -430,21 +474,22 @@ stability_data |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix() |>
+  round(3) |>
   knitr::kable()
 ```
 
-|               |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|----------:|----------:|-------------:|--------------:|
-| gax_a         | 0.0345913 | 0.0263737 |    0.0064942 |     0.0237008 |
-| ega_a         | 0.0248457 | 0.0561781 |    0.0025716 |     0.0099577 |
-| rb_post_xg_a  | 0.0318653 | 0.0415527 |    0.1357387 |     0.1407761 |
-| gen_post_xg_a | 0.0738328 | 0.0716996 |    0.1322418 |     0.1620306 |
+|               | gax_b | ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|------:|------:|-------------:|--------------:|
+| gax_a         | 0.035 | 0.026 |        0.006 |         0.024 |
+| ega_a         | 0.025 | 0.056 |        0.003 |         0.010 |
+| rb_post_xg_a  | 0.032 | 0.042 |        0.136 |         0.141 |
+| gen_post_xg_a | 0.074 | 0.072 |        0.132 |         0.162 |
 
 ## Table 4
 
 ``` r
 stability_data |>
-  dplyr::filter(n_a + n_b >= 30) |>
+  dplyr::filter(n_a + n_b >= 40) |>
   # Get metrics only
   dplyr::select(
     dplyr::starts_with("gax"),
@@ -460,15 +505,16 @@ stability_data |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix() |>
+  round(3) |>
   knitr::kable()
 ```
 
-|               |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|----------:|----------:|-------------:|--------------:|
-| gax_a         | 0.0435975 | 0.0346995 |   -0.0080152 |     0.0036074 |
-| ega_a         | 0.0460117 | 0.0344146 |   -0.0165259 |    -0.0327686 |
-| rb_post_xg_a  | 0.1170757 | 0.0577981 |    0.1548329 |     0.1428222 |
-| gen_post_xg_a | 0.1284540 | 0.0504602 |    0.1384314 |     0.1307297 |
+|               |  gax_b |  ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-------:|-------:|-------------:|--------------:|
+| gax_a         | -0.025 | -0.065 |       -0.040 |        -0.023 |
+| ega_a         | -0.025 | -0.033 |       -0.053 |        -0.076 |
+| rb_post_xg_a  |  0.028 |  0.035 |        0.219 |         0.226 |
+| gen_post_xg_a |  0.037 |  0.020 |        0.219 |         0.232 |
 
 ## Figure 6
 
