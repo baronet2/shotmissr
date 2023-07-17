@@ -120,17 +120,16 @@ statsbomb_shots_processed |>
 ## Figure 5
 
 ``` r
-yy <- seq(y_left_post(), y_right_post(), by = 0.1)
-zz <- seq(0, z_crossbar(), by = 0.03)
+yy <- seq(y_left_post(), y_right_post(), by = 0.025)
+zz <- seq(0, z_crossbar(), by = 0.01)
 shots <- expand.grid(y = yy, z = zz)
 shots |>
-  dplyr::mutate(post_shot_xg = predict_post_xg(y, z)) |>
+  dplyr::mutate(PostXg = as.numeric(predict_post_xg(y, z))) |>
   ggplot2::ggplot() +
-  ggplot2::geom_contour_filled(
-    mapping = ggplot2::aes(x = y, y = z, z = post_shot_xg),
-    bins = 100,
-    show.legend = FALSE
+  ggplot2::geom_tile(
+    mapping = ggplot2::aes(x = y, y = z, fill = PostXg),
   ) +
+  ggplot2::scale_fill_viridis_c() +
   plot_goalposts(color = "red", cex = 2) +
   plot_grass(color = "darkgreen", cex = 2) +
   ggplot2::theme_light() +
@@ -145,7 +144,6 @@ shots |>
 ![](miss_it_like_messi_files/figure-gfm/figure_5-1.png)<!-- -->
 
 ``` r
-
 
 print("AUROC of StatsBomb PostXg:")
 #> [1] "AUROC of StatsBomb PostXg:"
@@ -516,6 +514,20 @@ stability_data |>
 | rb_post_xg_a  |  0.028 |  0.035 |        0.219 |         0.226 |
 | gen_post_xg_a |  0.037 |  0.020 |        0.219 |         0.232 |
 
+``` r
+
+stability_data |>
+  dplyr::filter(n_a + n_b >= 40) |>
+  nrow()
+#> [1] 329
+
+stability_data |>
+  dplyr::filter(n_a + n_b >= 40) |>
+  dplyr::distinct(player) |>
+  nrow()
+#> [1] 257
+```
+
 ## Figure 6
 
 ``` r
@@ -540,26 +552,26 @@ bootstrapped_correlations <- suppressWarnings(
           cor()
       )
     ),
-    q25 = purrr::map(
+    q5 = purrr::map(
       cors,
-      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.25, na.rm = TRUE))
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.05, na.rm = TRUE))
     ),
     q50 = purrr::map(
       cors,
       ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.5, na.rm = TRUE))
     ),
-    q75 = purrr::map(
+    q95 = purrr::map(
       cors,
-      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.75, na.rm = TRUE))
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.95, na.rm = TRUE))
     )
   ) |>
-  dplyr::select(threshold, q25, q50, q75) |>
+  dplyr::select(threshold, q5, q50, q95) |>
   dplyr::mutate(metric = list(metric_names)) |>
   tidyr::unnest(metric) |>
   dplyr::mutate(
-    q25 = purrr::map2_dbl(q25, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q5 = purrr::map2_dbl(q5, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
     q50 = purrr::map2_dbl(q50, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
-    q75 = purrr::map2_dbl(q75, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]])
+    q95 = purrr::map2_dbl(q95, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]])
   )
 ) 
 
@@ -574,7 +586,7 @@ bootstrapped_correlations |>
   ) |>
   ggplot2::ggplot(ggplot2::aes(x = threshold)) +
   ggplot2::geom_line(ggplot2::aes(y = q50, colour = Metric)) +
-  ggplot2::geom_ribbon(ggplot2::aes(ymin = q25, ymax = q75, fill = Metric), alpha = 0.1) +
+  ggplot2::geom_ribbon(ggplot2::aes(ymin = q5, ymax = q95, fill = Metric), alpha = 0.1) +
   ggplot2::theme_light() +
   ggplot2::labs(
     x = "Minimum Sample Size",
