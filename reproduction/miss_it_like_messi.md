@@ -79,13 +79,13 @@ statsbomb_shots_processed |>
   plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
-  ggplot2::ylim(0, 3) +
+  ggplot2::ylim(0, 4) +
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
   ) +
   ggplot2::theme(legend.position = c(0.1, 0.85))
-#> Warning: Removed 13 rows containing missing values (geom_point).
+#> Warning: Removed 12 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-1.png)<!-- -->
@@ -106,13 +106,13 @@ statsbomb_shots_processed |>
   plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
-  ggplot2::ylim(0, 3) +
+  ggplot2::ylim(0, 4) +
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
   ) +
   ggplot2::theme(legend.position = c(0.1, 0.85))
-#> Warning: Removed 2 rows containing missing values (geom_point).
+#> Warning: Removed 1 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-2.png)<!-- -->
@@ -134,7 +134,7 @@ shots |>
   plot_grass(color = "darkgreen", cex = 2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
-  ggplot2::ylim(0, 3) +
+  ggplot2::ylim(0, 4) +
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"

@@ -70,7 +70,7 @@ statsbomb_shots_processed |>
   plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
-  ggplot2::ylim(0, 3) +
+  ggplot2::ylim(0, 4) +
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
@@ -91,7 +91,7 @@ statsbomb_shots_processed |>
   plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
   ggplot2::theme_light() +
   ggplot2::xlim(30, 50) +
-  ggplot2::ylim(0, 3) +
+  ggplot2::ylim(0, 4) +
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
@@ -115,7 +115,7 @@ shots |>
   plot_grass(color = "darkgreen", cex = 2) +
   ggplot2::theme_light() +
   ggplot2::xlim(35, 45) +
-  ggplot2::ylim(0, 3) +
+  ggplot2::ylim(0, 4) +
   ggplot2::labs(
     x = "Shot End y-coordinate",
     y = "Shot End z-coordinate"
