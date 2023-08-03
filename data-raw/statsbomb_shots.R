@@ -1,3 +1,5 @@
+devtools::load_all()
+
 load_data <- function(file_path) {
   read.csv(file_path, encoding = "UTF-8", header = TRUE) |>
     dplyr::select(League, Season, player, position,
@@ -24,6 +26,6 @@ statsbomb_shots_processed <- statsbomb_shots |>
   adjust_shot_end_coords() %>%
   project_shot_end_coords() %>%
   dplyr::select(-do_adjust_y, -do_project_saved) %>%
-  dplyr::filter(!is.na(z_end_proj))
+  prepare_shooting_skill_data(max_xg = 1, min_distance = 6)
 
 usethis::use_data(statsbomb_shots_processed, overwrite = TRUE)

@@ -5,7 +5,7 @@
 \alias{selected_components}
 \title{Indices of components selected via pruning}
 \format{
-An object of class \code{integer} of length 11.
+An object of class \code{integer} of length 8.
 }
 \usage{
 selected_components

@@ -9,8 +9,10 @@ devtools::load_all()
 ## Table 1
 
 ``` r
+nrow(statsbomb_shots_processed)
+#> [1] 77315
+
 statsbomb_shots_processed |>
-  prepare_shooting_skill_data() |>
   dplyr::group_by(League, Season) |>
   dplyr::summarise(num_shots = dplyr::n(), .groups = "keep") |>
   knitr::kable()
@@ -18,21 +20,21 @@ statsbomb_shots_processed |>
 
 | League | Season | num_shots |
 |:-------|-------:|----------:|
-| ARG    |   2019 |      2366 |
-| FR2    |   2018 |      2892 |
-| FR2    |   2019 |      2264 |
-| FR2    |   2020 |      2824 |
-| GR2    |   2018 |      2566 |
-| GR2    |   2019 |      2646 |
-| GR2    |   2020 |      2443 |
-| MLS    |   2018 |      3552 |
-| MLS    |   2019 |      3829 |
-| MLS    |   2020 |      2620 |
-| NED    |   2018 |      2774 |
-| NED    |   2019 |      2136 |
-| NED    |   2020 |      2603 |
-| USL    |   2019 |      1701 |
-| USL    |   2020 |      2332 |
+| ARG    |   2019 |      4425 |
+| FR2    |   2018 |      5534 |
+| FR2    |   2019 |      4190 |
+| FR2    |   2020 |      5457 |
+| GR2    |   2018 |      5123 |
+| GR2    |   2019 |      5213 |
+| GR2    |   2020 |      4934 |
+| MLS    |   2018 |      7056 |
+| MLS    |   2019 |      7435 |
+| MLS    |   2020 |      5297 |
+| NED    |   2018 |      5586 |
+| NED    |   2019 |      4102 |
+| NED    |   2020 |      5060 |
+| USL    |   2019 |      3273 |
+| USL    |   2020 |      4630 |
 
 ## Figure 1
 
@@ -40,13 +42,22 @@ statsbomb_shots_processed |>
 statsbomb_shots_processed |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 8) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_1-1.png)<!-- -->
@@ -58,13 +69,23 @@ statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 4) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
+#> Warning: Removed 12 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-1.png)<!-- -->
@@ -75,13 +96,23 @@ statsbomb_shots_processed |>
   dplyr::filter(League == "USL", Season == 2020) |>
   dplyr::filter(!is.na(z_end)) |>
   dplyr::filter(grepl("Saved", outcome)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end_proj,
     y = z_end_proj,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 4) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
+#> Warning: Removed 1 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_2-2.png)<!-- -->
@@ -89,21 +120,68 @@ statsbomb_shots_processed |>
 ## Figure 5
 
 ``` r
-yy <- seq(y_left_post(), y_right_post(), by = 0.1)
-zz <- seq(0, z_crossbar(), by = 0.03)
+yy <- seq(y_left_post(), y_right_post(), by = 0.025)
+zz <- seq(0, z_crossbar(), by = 0.01)
 shots <- expand.grid(y = yy, z = zz)
 shots |>
-  dplyr::mutate(post_shot_xg = predict_post_xg(y, z)) |>
+  dplyr::mutate(PostXg = as.numeric(predict_post_xg(y, z))) |>
   ggplot2::ggplot() +
-  ggplot2::geom_contour_filled(mapping = ggplot2::aes(
-    x = y,
-    y = z,
-    z = post_shot_xg), bins = 100, show.legend = FALSE) +
+  ggplot2::geom_tile(
+    mapping = ggplot2::aes(x = y, y = z, fill = PostXg),
+  ) +
+  ggplot2::scale_fill_viridis_c() +
   plot_goalposts(color = "red", cex = 2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_5-1.png)<!-- -->
+
+``` r
+
+print("AUROC of StatsBomb PostXg:")
+#> [1] "AUROC of StatsBomb PostXg:"
+pROC::auc(
+  pROC::roc(
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(outcome) == "Goal",
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(SBPostXg)
+  )
+)
+#> Setting levels: control = FALSE, case = TRUE
+#> Setting direction: controls < cases
+#> Area under the curve: 0.8601
+
+print("AUROC of Coordinates-based PostXg:")
+#> [1] "AUROC of Coordinates-based PostXg:"
+pROC::auc(
+  pROC::roc(
+    statsbomb_shots_processed |>
+      filter_post_xg_shots() |>
+      dplyr::pull(outcome) == "Goal",
+    predict_post_xg(
+      statsbomb_shots_processed |>
+        filter_post_xg_shots() |>
+        dplyr::pull(y_end_proj),
+      statsbomb_shots_processed |>
+        filter_post_xg_shots() |>
+        dplyr::pull(z_end_proj)
+    )
+  )
+)
+#> Setting levels: control = FALSE, case = TRUE
+#> Setting direction: controls < cases
+#> Area under the curve: 0.7035
+```
 
 ## Figure 7
 
@@ -111,13 +189,22 @@ shots |>
 statsbomb_shots |>
   dplyr::filter(League == "MLS", Season == 2018) |>
   dplyr::filter(!is.na(z_end)) |>
+  dplyr::rename(Outcome = outcome) |>
   ggplot2::ggplot() +
   ggplot2::geom_point(mapping = ggplot2::aes(
     x = y_end,
     y = z_end,
-    color = outcome)) +
+    color = Outcome)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(30, 50) +
+  ggplot2::ylim(0, 8) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_7-1.png)<!-- -->
@@ -169,7 +256,8 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_contour_filled(
     data = gaussians,
     mapping = ggplot2::aes(x = y, y = z, z = prob_low),
-    breaks = seq(0.01, 0.7, by = 0.07)
+    breaks = seq(0.01, 0.7, by = 0.07),
+    show.legend = FALSE
   ) +
   # Make Gaussian contour colour blue
   ggplot2::scale_fill_brewer() +
@@ -183,7 +271,16 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[1], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4.5) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
+#> Warning: Removed 1800 rows containing non-finite values (stat_contour_filled).
+#> Warning: Removed 1 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-1.png)<!-- -->
@@ -202,7 +299,8 @@ Hunter_et_al_2018_shots |>
   ggplot2::geom_contour_filled(
     data = gaussians,
     mapping = ggplot2::aes(x = y, y = z, z = prob_high),
-    breaks = seq(0.01, 0.3, by = 0.03)
+    breaks = seq(0.01, 0.3, by = 0.03),
+    show.legend = FALSE
   ) +
   # Make Gaussian contour colour blue
   ggplot2::scale_fill_brewer() +
@@ -216,65 +314,43 @@ Hunter_et_al_2018_shots |>
   # Add target location
   ggplot2::geom_point(x = y_center_line(), y = z_target[2], colour = "red") +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 4.5) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  )
+#> Warning: Removed 1800 rows containing non-finite values (stat_contour_filled).
+#> Warning: Removed 5 rows containing missing values (geom_point).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_8-2.png)<!-- -->
 
-## Estimate global weights
-
-``` r
-shots_data <- statsbomb_shots_processed |>
-  prepare_shooting_skill_data()
-
-mixture_model_components <- get_mixture_model_components()
-
-pdfs <- get_shot_probability_densities(
-  mixture_model_components,
-  shots = shots_data |>
-    dplyr::select(y_end_proj, z_end_proj) |>
-    as.matrix()
-)
-
-global_weights <- fit_global_weights(pdfs, iter = 500, seed = 42)
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: EXPERIMENTAL ALGORITHM:
-#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
-#> Chain 1:   or buggy. The interface is subject to change.
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.084 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 840 seconds.
-#> Chain 1: Adjust your expectations accordingly!
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Begin eta adaptation.
-#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
-#> Chain 1: 
-#> Chain 1: Begin stochastic gradient ascent.
-#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-#> Chain 1:    100      -253242.244             1.000            1.000
-#> Chain 1:    200      -252968.504             0.501            1.000
-#> Chain 1:    300      -252938.710             0.001            0.001   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
-#> Chain 1: 
-#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-#> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 2.41. Resampling is disabled. Decreasing
-#> tol_rel_obj may help if variational algorithm has terminated prematurely.
-#> Otherwise consider using sampling instead.
-```
-
 ## Figure 3
 
 ``` r
-mixture_model_components |>
+mixture_model_components <- get_mixture_model_components()
+
+yy = seq(34, 46, length.out = 100)
+zz = seq(0, 4, length.out = 100)
+yz = expand.grid(y = yy, z = zz)
+
+# Get probability density for each shot/component
+pdfs <- get_shot_probability_densities(
+  mixture_model_components[selected_components,],
+  as.matrix(yz)
+)
+
+# Normalize each column to put components on equal footing
+pdfs <- apply(pdfs, 2, function(x) {x / max(x)})
+
+mixture_model_pdfs <- yz |>
+  dplyr::mutate(pdf = apply(pdfs, 1, max)) |>
+  tibble::tibble()
+
+mixture_model_components[selected_components,] |>
   dplyr::mutate(
     y = purrr::map_dbl(mean, ~.[[1]]),
     z = purrr::map_dbl(mean, ~.[[2]]),
@@ -282,90 +358,82 @@ mixture_model_components |>
     lambda = as.factor(lambda)
   ) |>
   dplyr::filter(weight > 0.012) |>
-  ggplot2::ggplot(ggplot2::aes(x = y, y = z, alpha = weight, size = lambda)) +
-  ggplot2::geom_point(colour = "blue") +
+  dplyr::rename(Weight = weight) |>
+  ggplot2::ggplot() +
+  ggplot2::geom_point(
+    mapping = ggplot2::aes(x = y, y = z, alpha = Weight, size = lambda),
+    colour = "darkblue"
+  ) +
   ggplot2::scale_size_manual(values = c(3, 7)) +
   plot_goalposts(color = "red", cex = 2, alpha = 0.2) +
-  ggplot2::theme_bw()
+  plot_grass(color = "darkgreen", cex = 2, alpha = 0.2) +
+  ggplot2::theme_light() +
+  ggplot2::xlim(35, 45) +
+  ggplot2::ylim(0, 3) +
+  ggplot2::labs(
+    x = "Shot End y-coordinate",
+    y = "Shot End z-coordinate"
+  ) +
+  # Add contour plot of Gaussians
+  ggplot2::geom_contour_filled(
+    data = mixture_model_pdfs,
+    mapping = ggplot2::aes(x = y, y = z, z = pdf),
+    bins = 9,
+    alpha = 0.3,
+    breaks = seq(0.7, 1, by = 0.1),
+    show.legend = FALSE
+  ) +
+  # Make Gaussian contours coloured blue
+  ggplot2::scale_fill_brewer()
+#> Warning: Removed 3850 rows containing non-finite values (stat_contour_filled).
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_3-1.png)<!-- -->
 
-## Estimate player weights
+## Figure 4
 
 ``` r
-half_season_shots_data <- statsbomb_shots_processed |>
-  dplyr::filter(!is.na(z_end_proj)) |>
-  dplyr::group_by(player, Season) |>
-  dplyr::mutate(first_half_season = dplyr::row_number() < dplyr::n() / 2) |>
-  dplyr::ungroup()
-
-shooting_skill_data <- get_player_groups(
-  half_season_shots_data,
-  grouping_cols = c("player", "Season", "first_half_season"),
-  group_size_threshold = 3
-)
-
-selected_components <- which(global_weights > 0.012)
-
-pdfs <- get_shot_probability_densities(
-  mixture_model_components[selected_components,],
-  shooting_skill_data |> dplyr::select(y_end_proj, z_end_proj) |> as.matrix()
-)
-
-mixture_model_fit <- fit_player_weights(
-  pdfs,
-  shooting_skill_data$group_id,
-  alpha = 30,
-  iter = 500,
-  seed = 42
-)
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: EXPERIMENTAL ALGORITHM:
-#> Chain 1:   This procedure has not been thoroughly tested and may be unstable
-#> Chain 1:   or buggy. The interface is subject to change.
-#> Chain 1: ------------------------------------------------------------
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.161 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1610 seconds.
-#> Chain 1: Adjust your expectations accordingly!
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Begin eta adaptation.
-#> Chain 1: Iteration:   1 / 250 [  0%]  (Adaptation)
-#> Chain 1: Iteration:  50 / 250 [ 20%]  (Adaptation)
-#> Chain 1: Iteration: 100 / 250 [ 40%]  (Adaptation)
-#> Chain 1: Iteration: 150 / 250 [ 60%]  (Adaptation)
-#> Chain 1: Iteration: 200 / 250 [ 80%]  (Adaptation)
-#> Chain 1: Success! Found best value [eta = 1] earlier than expected.
-#> Chain 1: 
-#> Chain 1: Begin stochastic gradient ascent.
-#> Chain 1:   iter             ELBO   delta_ELBO_mean   delta_ELBO_med   notes 
-#> Chain 1:    100      -471292.882             1.000            1.000
-#> Chain 1:    200      -469268.411             0.502            1.000
-#> Chain 1:    300      -468540.833             0.003            0.004   MEAN ELBO CONVERGED   MEDIAN ELBO CONVERGED
-#> Chain 1: 
-#> Chain 1: Drawing a sample of size 1000 from the approximate posterior... 
-#> Chain 1: COMPLETED.
-#> Warning: Pareto k diagnostic value is 19.8. Resampling is disabled. Decreasing
-#> tol_rel_obj may help if variational algorithm has terminated prematurely.
-#> Otherwise consider using sampling instead.
-
-player_weights <- mixture_model_fit[["player_weights"]]
+shot_metrics |>
+  dplyr::group_by(Season, player, first_half_season, group_id) |>
+  dplyr::tally() |>
+  dplyr::arrange(group_id) |>
+  cbind(data.frame(player_weights)) |>
+  dplyr::filter(first_half_season) |>
+  dplyr::arrange(-n) |>
+  head(4) |>
+  dplyr::mutate(label = paste0(Season, " ", player)) |>
+  tidyr::pivot_longer(
+    dplyr::starts_with("X"),
+    names_to = "Component",
+    values_to = "Weight",
+    names_prefix = "X"
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::select(label, Component, Weight) |>
+  rbind(
+    data.frame(
+      label = "Global Weights",
+      Component = 1:length(selected_components),
+      Weight = global_weights
+    )
+  ) |>
+  dplyr::mutate(label = forcats::fct_rev(label)) |>
+  ggplot2::ggplot(ggplot2::aes(x = Component, y = Weight, fill = label, group = label)) +
+  ggplot2::geom_col(position = "dodge") +
+  ggplot2::theme_light() +
+  ggplot2::theme(
+    legend.position = c(0.2, 0.85),
+    legend.title = ggplot2::element_blank()
+  ) +
+  ggplot2::scale_fill_viridis_d()
 ```
 
+![](miss_it_like_messi_files/figure-gfm/figure_4-1.png)<!-- -->
+
+## Calculate player metrics
+
 ``` r
-component_values <- mixture_model_components[selected_components,] |>
-  get_component_values() |>
-  dplyr::pull(value)
-
-half_season_metrics <- shooting_skill_data |>
-  load_rb_post_xg(player_weights, component_values) |>
-  load_gen_post_xg(pdfs, mixture_model_fit[["global_weights"]], component_values)
-
-half_season_stats <- half_season_metrics |>
+half_season_stats <- shot_metrics |>
   dplyr::mutate(SBPostXg = ifelse(is.na(SBPostXg), 0, SBPostXg)) |>
   dplyr::mutate(goal_pct = (outcome == "Goal")) |>
   dplyr::mutate(
@@ -391,7 +459,6 @@ stability_data <- half_season_stats |>
 stability_data |>
   # Get metrics only
   dplyr::select(
-    dplyr::starts_with("goal_pct"),
     dplyr::starts_with("gax"),
     dplyr::starts_with("ega"),
     dplyr::matches("_xg")
@@ -405,25 +472,24 @@ stability_data |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix() |>
+  round(3) |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |     gax_b |     ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|----------:|----------:|-------------:|--------------:|
-| goal_pct_a    |  0.1753718 | 0.0408746 | 0.0858735 |    0.0958211 |     0.1397574 |
-| gax_a         |  0.0642856 | 0.0384039 | 0.0785441 |    0.0276487 |     0.0659014 |
-| ega_a         |  0.0387612 | 0.0092856 | 0.0544922 |   -0.0058102 |     0.0292018 |
-| rb_post_xg_a  |  0.0732375 | 0.0032928 | 0.0168249 |    0.1188463 |     0.1086980 |
-| gen_post_xg_a |  0.0982143 | 0.0146206 | 0.0290529 |    0.1036663 |     0.1371268 |
+|               | gax_b | ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|------:|------:|-------------:|--------------:|
+| gax_a         | 0.035 | 0.026 |        0.006 |         0.024 |
+| ega_a         | 0.025 | 0.056 |        0.003 |         0.010 |
+| rb_post_xg_a  | 0.032 | 0.042 |        0.136 |         0.141 |
+| gen_post_xg_a | 0.074 | 0.072 |        0.132 |         0.162 |
 
 ## Table 4
 
 ``` r
 stability_data |>
-  dplyr::filter(n_a + n_b >= 30) |>
+  dplyr::filter(n_a + n_b >= 40) |>
   # Get metrics only
   dplyr::select(
-    dplyr::starts_with("goal_pct"),
     dplyr::starts_with("gax"),
     dplyr::starts_with("ega"),
     dplyr::matches("_xg")
@@ -437,40 +503,96 @@ stability_data |>
   data.frame() |>
   dplyr::select(dplyr::ends_with("_b")) |>
   as.matrix() |>
+  round(3) |>
   knitr::kable()
 ```
 
-|               | goal_pct_b |      gax_b |      ega_b | rb_post_xg_b | gen_post_xg_b |
-|:--------------|-----------:|-----------:|-----------:|-------------:|--------------:|
-| goal_pct_a    |  0.2589755 | -0.0205521 | -0.0045566 |    0.0901779 |     0.0925456 |
-| gax_a         |  0.0369088 |  0.0111359 |  0.0280317 |   -0.0398064 |    -0.0215731 |
-| ega_a         | -0.0108390 | -0.0188603 | -0.0076556 |   -0.0334169 |    -0.0502244 |
-| rb_post_xg_a  |  0.1387011 |  0.0198329 | -0.0081443 |    0.1168845 |     0.1087846 |
-| gen_post_xg_a |  0.1756899 |  0.0360483 |  0.0097168 |    0.1396830 |     0.1429201 |
+|               |  gax_b |  ega_b | rb_post_xg_b | gen_post_xg_b |
+|:--------------|-------:|-------:|-------------:|--------------:|
+| gax_a         | -0.025 | -0.065 |       -0.040 |        -0.023 |
+| ega_a         | -0.025 | -0.033 |       -0.053 |        -0.076 |
+| rb_post_xg_a  |  0.028 |  0.035 |        0.219 |         0.226 |
+| gen_post_xg_a |  0.037 |  0.020 |        0.219 |         0.232 |
+
+``` r
+
+stability_data |>
+  dplyr::filter(n_a + n_b >= 40) |>
+  nrow()
+#> [1] 329
+
+stability_data |>
+  dplyr::filter(n_a + n_b >= 40) |>
+  dplyr::distinct(player) |>
+  nrow()
+#> [1] 257
+```
 
 ## Figure 6
 
 ``` r
-get_stability_above_threshold <- function(metric, n) {
-  filtered_data <- stability_data |>
-    dplyr::filter(n_a + n_b >= n)
-  
-  # TODO bootstrap rows here to get estimate of lower and upper bound
-  
-  cor(filtered_data[[paste0(metric, "_a")]], filtered_data[[paste0(metric, "_b")]])
-}
+set.seed(42)
 
-expand.grid(threshold = 6:60, metric = c("gax", "ega", "rb_post_xg", "gen_post_xg")) |>
+metric_names = c("gax", "ega", "rb_post_xg", "gen_post_xg")
+
+n_bootstraps <- 50
+
+bootstrapped_correlations <- suppressWarnings(
+  data.frame(threshold = 6:50) |>
   dplyr::mutate(
-    stability = purrr::map2_dbl(threshold, metric, ~ get_stability_above_threshold(.y, .x))
+    filtered_data = purrr::map(threshold, ~ stability_data |>
+      dplyr::filter(n_a + n_b >= .x)),
+    cors = purrr::map(
+      filtered_data,
+      ~ replicate(
+        n = n_bootstraps,
+        expr = .x |>
+          dplyr::sample_frac(size = 1, replace = TRUE) |>
+          dplyr::select(dplyr::matches(paste0(metric_names, collapse = "|"))) |>
+          cor()
+      )
+    ),
+    q5 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.05, na.rm = TRUE))
+    ),
+    q50 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.5, na.rm = TRUE))
+    ),
+    q95 = purrr::map(
+      cors,
+      ~ apply(.x, 1:2, function(x) quantile(x, probs = 0.95, na.rm = TRUE))
+    )
   ) |>
-  ggplot2::ggplot(ggplot2::aes(x = threshold, y= stability, colour = metric)) +
-  ggplot2::geom_line() +
-  ggplot2::theme_bw()
+  dplyr::select(threshold, q5, q50, q95) |>
+  dplyr::mutate(metric = list(metric_names)) |>
+  tidyr::unnest(metric) |>
+  dplyr::mutate(
+    q5 = purrr::map2_dbl(q5, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q50 = purrr::map2_dbl(q50, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]]),
+    q95 = purrr::map2_dbl(q95, metric, ~ .x[[paste0(.y, "_a"), paste0(.y, "_b")]])
+  )
+) 
+
+bootstrapped_correlations |>
+  dplyr::mutate(
+    Metric = dplyr::case_when(
+      metric == "gax" ~ "GAX",
+      metric == "ega" ~ "EGA",
+      metric == "rb_post_xg" ~ "RBPostXg",
+      metric == "gen_post_xg" ~ "GenPostXg"
+    )
+  ) |>
+  ggplot2::ggplot(ggplot2::aes(x = threshold)) +
+  ggplot2::geom_line(ggplot2::aes(y = q50, colour = Metric)) +
+  ggplot2::geom_ribbon(ggplot2::aes(ymin = q5, ymax = q95, fill = Metric), alpha = 0.1) +
+  ggplot2::theme_light() +
+  ggplot2::labs(
+    x = "Minimum Sample Size",
+    y = "Correlation"
+  ) +
+  ggplot2::theme(legend.position = c(0.1, 0.85))
 ```
 
 ![](miss_it_like_messi_files/figure-gfm/figure_6-1.png)<!-- -->
-
-``` r
-# TODO Use geom_ribbon here to add custom error bars returned by get_stability_above_threshold
-```

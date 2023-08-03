@@ -144,11 +144,13 @@ project_shot_end_coords <- function(data)
 #' pre-shot expected goals value of less than 0.1 and valid shot end coordinates.
 #'
 #' @param data A data frame with shot details
+#' @param max_xg A number indicating the maximum pre-shot expected goals to include
+#' @param min_distance A number indicating the minimum shot distance to include
 #'
 #' @return The same data frame with some rows removed
 #'
 #' @export
-filter_shooting_skill_data <- function(data)
+filter_shooting_skill_data <- function(data, max_xg = 0.1, min_distance = 15)
 {
   euclidean_dist <- function(x1, y1, x2, y2) {
     sqrt((x2 - x1)^2 + (y2 - y1)^2)
@@ -168,8 +170,10 @@ filter_shooting_skill_data <- function(data)
     dplyr::filter(
       !is.na(y_end_proj),
       !is.na(z_end_proj),
-      SBPreXg < 0.1,
-      dplyr::between(distance, 15, Inf)
+      SBPreXg < max_xg,
+      distance >= min_distance
+      # grepl("Foot", body_part),
+      # grepl("Open Play", type)
     )
 }
 
@@ -201,15 +205,15 @@ flip_left_foot_shot_end_coords <- function(data)
 #' @description Prepare data used to measure shooting skill. Some rows are removed
 #' and left-footed shots are reflected.
 #'
-#' @param data A data frame with shot details
+#' @inheritParams filter_shooting_skill_data
 #'
 #' @return The data frame modified for use in the shooting skill modeling pipeline
 #'
 #' @export
-prepare_shooting_skill_data <- function(data)
+prepare_shooting_skill_data <- function(data, max_xg = 0.1, min_distance = 15)
 {
   data %>%
-    filter_shooting_skill_data() %>%
+    filter_shooting_skill_data(max_xg = max_xg, min_distance = min_distance) %>%
     flip_left_foot_shot_end_coords()
 }
 

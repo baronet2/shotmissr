@@ -1,3 +1,5 @@
+devtools::load_all()
+
 # From https://win-vector.com/2014/05/30/trimming-the-fat-from-glm-models-in-r/
 stripGlmLR = function(cm) {
   cm$y = c()
@@ -24,12 +26,17 @@ stripGlmLR = function(cm) {
   cm
 }
 
-data <- statsbomb_shots_processed %>%
+data <- statsbomb_shots |>
+  dplyr::mutate(
+    do_adjust_y = Season <= 2018,
+    do_project_saved = !do_adjust_y
+  ) %>%
+  adjust_shot_end_coords() %>%
+  project_shot_end_coords() %>%
+  dplyr::select(-do_adjust_y, -do_project_saved) %>%
+  prepare_shooting_skill_data(max_xg = 1, min_distance = 0) |>
   filter_post_xg_shots() %>%
-  flip_left_foot_shot_end_coords() %>%
-  dplyr::mutate(Goal = outcome == "Goal",
-                y = y_end_proj,
-                z = z_end_proj)
+  dplyr::mutate(Goal = outcome == "Goal")
 
 post_shot_xg_model <- glm(Goal ~ stats::poly(y_end_proj, 3) + stats::poly(z_end_proj, 3), data = data, family = "binomial") %>%
   stripGlmLR()
