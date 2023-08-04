@@ -41,5 +41,6 @@ If you use this work, please cite our paper. We provide the `bibtex` below:
 @misc{miss_it_like_messi,
   author =       {Baron, Ethan and Sandholtz, Nathan and Chan, Timothy, and Pleuler, Devin},
   title =        {Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer},
+  url =          {https://arxiv.org/abs/2308.01523}
 }
 ```
