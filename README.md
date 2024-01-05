@@ -1,7 +1,8 @@
 # Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer
 
-This is a companion repository to the paper "Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer".
-Previous version of this work were presented at the [2021 New England Symposium on Statistics in Sport](https://www.youtube.com/watch?v=zQCl1cL-JxA&t=6s)
+This is a companion repository to the paper "Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer", published in the [Journal of Quantitative Analysis in Sports (2024)](https://www.degruyter.com/document/doi/10.1515/jqas-2022-0107/html). It is also available on [arXiv](https://arxiv.org/abs/2308.01523).
+
+Previous versions of this work were presented at the [2021 New England Symposium on Statistics in Sports](https://www.youtube.com/watch?v=zQCl1cL-JxA&t=6s)
 and the 2022 Canadian Operational Research Society Annual Conference in Vancouver, Canada, where it was selected as the winner of the
 Undergraduate Category in the [Student Paper Competition](https://www.cors.ca/?q=content/student-paper-competition).
 
@@ -38,9 +39,14 @@ devtools::install_github("baronet2/shotmissr")
 If you use this work, please cite our paper. We provide the `bibtex` below:
 
 ```bibtex
-@misc{miss_it_like_messi,
-  author =       {Baron, Ethan and Sandholtz, Nathan and Chan, Timothy, and Pleuler, Devin},
-  title =        {Miss It Like Messi: Extracting Value from Off-Target Shots in Soccer},
-  url =          {https://arxiv.org/abs/2308.01523}
+@article{miss_it_like_messi,
+  author =       {Ethan Baron and Nathan Sandholtz and Devin Pleuler and Timothy C. Y. Chan},
+  title =        {Miss it like Messi: Extracting value from off-target shots in soccer},
+  journal =      {Journal of Quantitative Analysis in Sports},
+  year =         {2024},
+  month =        {January},
+  day =          {1},
+  doi =          {doi:10.1515/jqas-2022-0107},
+  url =          {https://www.degruyter.com/document/doi/10.1515/jqas-2022-0107/html}
 }
 ```
